@@ -15,8 +15,15 @@ from typing import Any
 
 import numpy as np
 import pandas as pd
-import shap
-import xgboost as xgb
+try:
+    import shap
+except ImportError:
+    shap = None
+
+try:
+    import xgboost as xgb
+except ImportError:
+    xgb = None
 
 try:
     from rapidfuzz import fuzz

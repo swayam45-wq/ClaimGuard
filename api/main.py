@@ -19,8 +19,15 @@ import time
 from contextlib import asynccontextmanager
 from typing import Any
 
-import shap
-import xgboost as xgb
+try:
+    import shap
+except ImportError:
+    shap = None
+
+try:
+    import xgboost as xgb
+except ImportError:
+    xgb = None
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
