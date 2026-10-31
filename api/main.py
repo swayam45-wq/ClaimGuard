@@ -9,6 +9,7 @@ References:
 - CCC Secure Share: https://www.cccsecureshare.com/Developers
 - CIECA BMS standard: https://www.cccsecureshare.com/Faq
 """
+
 from __future__ import annotations
 
 import json
@@ -96,8 +97,7 @@ FRAUD_EXPLANATIONS: dict[str, str] = {
         "of ${median:.2f}."
     ),
     "duplicate_line_items": (
-        "This line appears to be a near-duplicate of another line item "
-        "(similarity: {score:.0%})."
+        "This line appears to be a near-duplicate of another line item (similarity: {score:.0%})."
     ),
     "unnecessary_operations": (
         "This {operation} operation is on a panel ({panel}) not adjacent to the "
@@ -291,9 +291,7 @@ def extract_features(estimate: EstimateIn, feature_names: list[str]) -> pd.DataF
 
     # --- Cost aggregates ---
     total_labor = sum(li.labor_hours_billed * li.labor_rate for li in items)
-    total_parts = sum(
-        (li.part.billed_price if li.part is not None else 0.0) for li in items
-    )
+    total_parts = sum((li.part.billed_price if li.part is not None else 0.0) for li in items)
     total_billed: float = total_labor + total_parts
     labor_parts_ratio: float = total_labor / max(total_parts, 1.0)
 
@@ -373,7 +371,7 @@ def extract_features(estimate: EstimateIn, feature_names: list[str]) -> pd.DataF
 _HOURS_RATIO_THRESHOLD = 1.3
 _PRICE_RATIO_THRESHOLD = 1.2
 _DUP_SIM_THRESHOLD = 0.75
-_LINE_SUSPICION_THRESHOLD = 0.4   # minimum score to flag a line
+_LINE_SUSPICION_THRESHOLD = 0.4  # minimum score to flag a line
 
 
 def _score_line(
@@ -392,13 +390,13 @@ def _score_line(
 
     # Inflated labor hours
     if hr > _HOURS_RATIO_THRESHOLD:
-        weight = min((hr - 1.0) / 2.0, 1.0)   # saturates at 3× book
+        weight = min((hr - 1.0) / 2.0, 1.0)  # saturates at 3× book
         score += 0.40 * weight
         fraud_types.append("inflated_labor_hours")
 
     # Part price markup
     if pr > _PRICE_RATIO_THRESHOLD:
-        weight = min((pr - 1.0) / 1.5, 1.0)   # saturates at 2.5× OEM
+        weight = min((pr - 1.0) / 1.5, 1.0)  # saturates at 2.5× OEM
         score += 0.30 * weight
         fraud_types.append("part_price_markup")
 
@@ -414,11 +412,7 @@ def _score_line(
         fraud_types.append("unnecessary_operations")
 
     # Labor-parts mismatch: lots of hours for a cheap part
-    if (
-        li.part is not None
-        and li.part.billed_price < 50.0
-        and li.labor_hours_billed > 3.0
-    ):
+    if li.part is not None and li.part.billed_price < 50.0 and li.labor_hours_billed > 3.0:
         score = min(score + 0.10, 1.0)
         if "labor_parts_mismatch" not in fraud_types:
             fraud_types.append("labor_parts_mismatch")
@@ -426,7 +420,9 @@ def _score_line(
     return min(score, 1.0), fraud_types
 
 
-def _build_explanation(li: LineItemIn, fraud_types: list[str], hr: float, pr: float, dup_score: float) -> str:
+def _build_explanation(
+    li: LineItemIn, fraud_types: list[str], hr: float, pr: float, dup_score: float
+) -> str:
     """Render the most relevant fraud explanation template for this line."""
     if not fraud_types:
         return "No specific fraud pattern detected."
@@ -494,8 +490,12 @@ def _flag_lines(
         shap_weights = {}
 
     # Weight boosts from SHAP
-    hours_boost = shap_weights.get("max_hours_ratio", 0.0) + shap_weights.get("mean_hours_ratio", 0.0)
-    price_boost = shap_weights.get("max_part_price_ratio", 0.0) + shap_weights.get("mean_part_price_ratio", 0.0)
+    hours_boost = shap_weights.get("max_hours_ratio", 0.0) + shap_weights.get(
+        "mean_hours_ratio", 0.0
+    )
+    price_boost = shap_weights.get("max_part_price_ratio", 0.0) + shap_weights.get(
+        "mean_part_price_ratio", 0.0
+    )
     dup_boost = shap_weights.get("duplicate_sim_score", 0.0)
 
     flagged: list[FlaggedLineOut] = []
@@ -548,16 +548,32 @@ def _run_prediction(estimate: EstimateIn, app_state: Any) -> PredictionOut:
     df = extract_features(estimate, feature_names)
 
     if model is None:
-        logger.info("Using baseline feature-heuristic scorer (trained model artifact not loaded yet)")
+        logger.info(
+            "Using baseline feature-heuristic scorer (trained model artifact not loaded yet)"
+        )
         # Fallback scoring when model has not been trained yet
         max_hr = float(df["max_hours_ratio"].iloc[0]) if "max_hours_ratio" in df.columns else 1.0
-        max_pr = float(df["max_part_price_ratio"].iloc[0]) if "max_part_price_ratio" in df.columns else 1.0
-        dup_sim = float(df["duplicate_sim_score"].iloc[0]) if "duplicate_sim_score" in df.columns else 0.0
-        non_adj = float(df["has_non_adjacent_op"].iloc[0]) if "has_non_adjacent_op" in df.columns else 0.0
+        max_pr = (
+            float(df["max_part_price_ratio"].iloc[0])
+            if "max_part_price_ratio" in df.columns
+            else 1.0
+        )
+        dup_sim = (
+            float(df["duplicate_sim_score"].iloc[0]) if "duplicate_sim_score" in df.columns else 0.0
+        )
+        non_adj = (
+            float(df["has_non_adjacent_op"].iloc[0]) if "has_non_adjacent_op" in df.columns else 0.0
+        )
 
         hours_score = max(0.0, min(1.0, (max_hr - 1.0) / 1.5))
         price_score = max(0.0, min(1.0, (max_pr - 1.0) / 0.6))
-        prob = float(np.clip(0.04 + 0.40 * hours_score + 0.35 * price_score + 0.25 * dup_sim + 0.20 * non_adj, 0.01, 0.97))
+        prob = float(
+            np.clip(
+                0.04 + 0.40 * hours_score + 0.35 * price_score + 0.25 * dup_sim + 0.20 * non_adj,
+                0.01,
+                0.97,
+            )
+        )
         shap_row = np.zeros(len(feature_names))
     else:
         # 2. XGBoost inference

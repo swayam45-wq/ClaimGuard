@@ -9,17 +9,18 @@ Generates:
 
 All outputs saved to models/artifacts/ and eval/outputs/
 """
+
 from __future__ import annotations
 
 import argparse
 import json
-import pickle
 import warnings
 from datetime import date
 from pathlib import Path
 from typing import Any
 
 import matplotlib
+
 matplotlib.use("Agg")  # non-interactive backend — must come before pyplot import
 import matplotlib.pyplot as plt
 import numpy as np
@@ -58,6 +59,7 @@ N_SPLITS: int = 5  # Must match train.py to produce the same last fold
 # ---------------------------------------------------------------------------
 # Data loading helpers
 # ---------------------------------------------------------------------------
+
 
 def load_model(artifacts_dir: Path) -> xgb.Booster:
     """Load the trained XGBoost booster from model.json.
@@ -141,6 +143,7 @@ def load_feature_names(artifacts_dir: Path) -> list[str]:
 # Test-set extraction (last GroupKFold split — deterministic)
 # ---------------------------------------------------------------------------
 
+
 def get_test_split(
     X: pd.DataFrame,
     y: pd.Series,
@@ -177,6 +180,7 @@ def get_test_split(
 # Shop feature augmentation (mirrors train.py — must be identical)
 # ---------------------------------------------------------------------------
 
+
 def augment_with_shop_features(
     X_train: pd.DataFrame,
     y_train: pd.Series,
@@ -210,8 +214,10 @@ def augment_with_shop_features(
     if "total_cost" in shop_df.columns:
         agg["total_cost"] = "mean"
 
-    shop_stats = shop_df.groupby("shop_id").agg(agg).rename(
-        columns={"label": "shop_fraud_rate", "total_cost": "shop_avg_total_cost"}
+    shop_stats = (
+        shop_df.groupby("shop_id")
+        .agg(agg)
+        .rename(columns={"label": "shop_fraud_rate", "total_cost": "shop_avg_total_cost"})
     )
     global_fraud_rate = float(y_train.mean())
     global_avg_cost = (
@@ -226,8 +232,7 @@ def augment_with_shop_features(
         ]
         if "shop_avg_total_cost" in shop_stats.columns:
             X_aug["shop_avg_total_cost"] = [
-                shop_stats["shop_avg_total_cost"].get(s, global_avg_cost)
-                for s in shop_ids
+                shop_stats["shop_avg_total_cost"].get(s, global_avg_cost) for s in shop_ids
             ]
         else:
             X_aug["shop_avg_total_cost"] = global_avg_cost
@@ -239,6 +244,7 @@ def augment_with_shop_features(
 # ---------------------------------------------------------------------------
 # Prediction
 # ---------------------------------------------------------------------------
+
 
 def predict(
     booster: xgb.Booster,
@@ -265,6 +271,7 @@ def predict(
 # Metrics computation
 # ---------------------------------------------------------------------------
 
+
 def compute_metrics(
     y_true: pd.Series,
     y_prob: np.ndarray,
@@ -283,15 +290,16 @@ def compute_metrics(
     y_pred = (y_prob >= threshold).astype(int)
     return {
         "precision": float(precision_score(y_true, y_pred, zero_division=0)),
-        "recall":    float(recall_score(y_true, y_pred, zero_division=0)),
-        "f1":        float(f1_score(y_true, y_pred, zero_division=0)),
-        "pr_auc":    float(average_precision_score(y_true, y_prob)),
+        "recall": float(recall_score(y_true, y_pred, zero_division=0)),
+        "f1": float(f1_score(y_true, y_pred, zero_division=0)),
+        "pr_auc": float(average_precision_score(y_true, y_prob)),
     }
 
 
 # ---------------------------------------------------------------------------
 # Per-fraud-type recall
 # ---------------------------------------------------------------------------
+
 
 def compute_per_fraud_type_recall(
     y_true: pd.Series,
@@ -321,10 +329,7 @@ def compute_per_fraud_type_recall(
     for fraud_type in FRAUD_TYPES:
         # Identify test samples whose estimate contains this fraud type
         mask = np.array(
-            [
-                fraud_type in id_to_fraud_types.get(idx, [])
-                for idx in test_index
-            ],
+            [fraud_type in id_to_fraud_types.get(idx, []) for idx in test_index],
             dtype=bool,
         )
         count = int(mask.sum())
@@ -341,6 +346,7 @@ def compute_per_fraud_type_recall(
 # ---------------------------------------------------------------------------
 # Plot helpers
 # ---------------------------------------------------------------------------
+
 
 def _ensure_dir(path: Path) -> None:
     path.mkdir(parents=True, exist_ok=True)
@@ -369,15 +375,17 @@ def save_confusion_matrix_plot(
     fig, axes = plt.subplots(1, 2, figsize=(12, 5))
 
     for ax, matrix, title, fmt in [
-        (axes[0], cm,      "Confusion Matrix (Counts)",     "d"),
+        (axes[0], cm, "Confusion Matrix (Counts)", "d"),
         (axes[1], cm_norm, "Confusion Matrix (Normalised)", ".2f"),
     ]:
         im = ax.imshow(matrix, interpolation="nearest", cmap="Blues")
         fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
         ax.set(
             title=title,
-            xticks=[0, 1], yticks=[0, 1],
-            xticklabels=labels, yticklabels=labels,
+            xticks=[0, 1],
+            yticks=[0, 1],
+            xticklabels=labels,
+            yticklabels=labels,
             xlabel="Predicted label",
             ylabel="True label",
         )
@@ -387,8 +395,11 @@ def save_confusion_matrix_plot(
                 val = matrix[i, j]
                 text = f"{val:{fmt}}" if fmt != "d" else f"{int(val):,}"
                 ax.text(
-                    j, i, text,
-                    ha="center", va="center",
+                    j,
+                    i,
+                    text,
+                    ha="center",
+                    va="center",
                     color="white" if val > thresh else "black",
                     fontsize=13,
                 )
@@ -419,10 +430,13 @@ def save_pr_curve_plot(
     precision_vals, recall_vals, _ = precision_recall_curve(y_true, y_prob)
 
     fig, ax = plt.subplots(figsize=(8, 6))
-    ax.plot(recall_vals, precision_vals, lw=2, color="steelblue",
-            label=f"PR-AUC = {pr_auc:.3f}")
-    ax.axhline(y=float(y_true.mean()), color="gray", linestyle="--",
-               label=f"Baseline (fraud rate = {y_true.mean():.3f})")
+    ax.plot(recall_vals, precision_vals, lw=2, color="steelblue", label=f"PR-AUC = {pr_auc:.3f}")
+    ax.axhline(
+        y=float(y_true.mean()),
+        color="gray",
+        linestyle="--",
+        label=f"Baseline (fraud rate = {y_true.mean():.3f})",
+    )
     ax.set(
         xlabel="Recall",
         ylabel="Precision",
@@ -481,6 +495,7 @@ def save_shap_importance_plot(
 # Metrics JSON persistence
 # ---------------------------------------------------------------------------
 
+
 def save_metrics_json(
     metrics: dict[str, float],
     per_fraud_type: dict[str, dict[str, Any]],
@@ -499,25 +514,25 @@ def save_metrics_json(
     """
     _ensure_dir(artifacts_dir)
     payload: dict[str, Any] = {
-        "precision":        round(metrics["precision"], 6),
-        "recall":           round(metrics["recall"],    6),
-        "f1":               round(metrics["f1"],        6),
-        "pr_auc":           round(metrics["pr_auc"],    6),
-        "per_fraud_type":   {
+        "precision": round(metrics["precision"], 6),
+        "recall": round(metrics["recall"], 6),
+        "f1": round(metrics["f1"], 6),
+        "pr_auc": round(metrics["pr_auc"], 6),
+        "per_fraud_type": {
             ft: {
                 "recall": (
-                    round(v["recall"], 6) if not (
-                        isinstance(v["recall"], float) and np.isnan(v["recall"])
-                    ) else None
+                    round(v["recall"], 6)
+                    if not (isinstance(v["recall"], float) and np.isnan(v["recall"]))
+                    else None
                 ),
                 "count": v["count"],
             }
             for ft, v in per_fraud_type.items()
         },
         "confusion_matrix": cm.tolist(),
-        "threshold":        THRESHOLD,
-        "test_shop_count":  int(groups_test.nunique()),
-        "eval_date":        date.today().isoformat(),
+        "threshold": THRESHOLD,
+        "test_shop_count": int(groups_test.nunique()),
+        "eval_date": date.today().isoformat(),
     }
     out_path = artifacts_dir / "metrics.json"
     with open(out_path, "w", encoding="utf-8") as fh:
@@ -528,6 +543,7 @@ def save_metrics_json(
 # ---------------------------------------------------------------------------
 # Reporting
 # ---------------------------------------------------------------------------
+
 
 def print_summary(
     metrics: dict[str, float],
@@ -547,7 +563,7 @@ def print_summary(
     print("ClaimGuard — Evaluation Results")
     print("=" * 60)
     print(f"  Test shops : {groups_test.nunique():,}")
-    print(f"  Test samples: {len(y_test):,}  (fraud rate: {y_test.mean()*100:.1f}%)")
+    print(f"  Test samples: {len(y_test):,}  (fraud rate: {y_test.mean() * 100:.1f}%)")
     print()
     print(f"  Precision : {metrics['precision']:.3f}")
     print(f"  Recall    : {metrics['recall']:.3f}")
@@ -565,7 +581,7 @@ def print_summary(
 
     # Per-fraud-type table
     print(f"  {'Fraud Type':<30} | {'Recall':>7} | {'Count':>7}")
-    print(f"  {'-'*30}-+-{'-'*7}-+-{'-'*7}")
+    print(f"  {'-' * 30}-+-{'-' * 7}-+-{'-' * 7}")
     for ft, vals in per_fraud_type.items():
         recall_str = f"{vals['recall']:.3f}" if vals["count"] > 0 else "  N/A "
         print(f"  {ft:<30} | {recall_str:>7} | {vals['count']:>7,}")
@@ -575,6 +591,7 @@ def print_summary(
 # ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------
+
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
@@ -616,10 +633,10 @@ def parse_args() -> argparse.Namespace:
 def main() -> None:
     args = parse_args()
 
-    data_dir      = Path(args.data)
+    data_dir = Path(args.data)
     artifacts_dir = Path(args.artifacts)
-    out_dir       = Path(args.out)
-    threshold     = args.threshold
+    out_dir = Path(args.out)
+    threshold = args.threshold
 
     print("=" * 60)
     print("ClaimGuard XGBoost Fraud Classifier — Evaluation")
@@ -627,8 +644,8 @@ def main() -> None:
 
     # ---- Load assets -------------------------------------------------------
     print("\nLoading model and data…")
-    booster       = load_model(artifacts_dir)
-    X, y, groups  = load_data(data_dir)
+    booster = load_model(artifacts_dir)
+    X, y, groups = load_data(data_dir)
     feature_names = load_feature_names(artifacts_dir)
     id_to_fraud_types = load_estimates(data_dir)
     print(f"  Full dataset: {len(X):,} samples, {X.shape[1]:,} features")
@@ -644,9 +661,7 @@ def main() -> None:
     print(f"  Train: {len(X_train):,}  |  Test: {len(X_test):,}")
 
     # ---- Augment test features (leak-safe) ---------------------------------
-    _, X_test_aug = augment_with_shop_features(
-        X_train, y_train, X_test, groups_train, groups_test
-    )
+    _, X_test_aug = augment_with_shop_features(X_train, y_train, X_test, groups_train, groups_test)
 
     # ---- Predict -----------------------------------------------------------
     print("\nRunning inference…")

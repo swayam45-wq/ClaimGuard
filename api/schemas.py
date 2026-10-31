@@ -3,12 +3,12 @@ Pydantic v2 schemas for ClaimGuard API.
 Modeled on CIECA BMS (Business Message Suite) estimate structure.
 See: https://www.cccsecureshare.com/Faq
 """
+
 from __future__ import annotations
 
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
-
 
 # ---------------------------------------------------------------------------
 # Input schemas

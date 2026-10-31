@@ -4,20 +4,18 @@ fraud_injector.py — Injects realistic fraud patterns into clean estimates.
 All 6 fraud patterns are implemented. Lines are labelled with
 `fraud_flag=1` and `fraud_type=<pattern_name>` where the fraud occurs.
 """
+
 from __future__ import annotations
 
 import copy
-import math
 from typing import Any
 
 import numpy as np
-
 from pricing import (
     ADJACENT_PANELS,
     PANELS,
     PHANTOM_PARTS,
     TRIM_FEATURES,
-    get_regional_part_price,
 )
 
 # ---------------------------------------------------------------------------
@@ -84,17 +82,15 @@ def _part_price_markup(
     regional_median * uniform(1.25, 1.60).
     """
     lines: list[dict[str, Any]] = estimate["line_items"]
-    candidates = [l for l in lines if l.get("part") is not None]
+    candidates = [item for item in lines if item.get("part") is not None]
     if not candidates:
         return
-    idx: int  = int(rng.integers(0, len(candidates)))
-    line       = candidates[idx]
+    idx: int = int(rng.integers(0, len(candidates)))
+    line = candidates[idx]
     panel: str = line["panel"]
     v_class: str = estimate["vehicle"]["class"]
 
-    median_price: float = (
-        regional_medians.get(panel, {}).get(v_class, line["part"]["oem_price"])
-    )
+    median_price: float = regional_medians.get(panel, {}).get(v_class, line["part"]["oem_price"])
     inflated: float = round(float(median_price) * rng.uniform(1.25, 1.60), 2)
     line["part"]["billed_price"] = inflated
     line["fraud_flag"] = 1
@@ -112,9 +108,9 @@ def _duplicate_line_items(
     lines: list[dict[str, Any]] = estimate["line_items"]
     if not lines:
         return
-    idx: int  = int(rng.integers(0, len(lines)))
-    original   = lines[idx]
-    clone      = copy.deepcopy(original)
+    idx: int = int(rng.integers(0, len(lines)))
+    original = lines[idx]
+    clone = copy.deepcopy(original)
 
     # Alter description slightly
     suffixes = [" - supplemental", " - additional", " (revised)"]
@@ -125,14 +121,14 @@ def _duplicate_line_items(
         clone["description"] = clone["description"] + suffixes[suffix_idx]
 
     # Assign new line_id
-    max_id: int = max(l["line_id"] for l in lines)
+    max_id: int = max(item["line_id"] for item in lines)
     clone["line_id"] = max_id + 1
 
     # Mark both
     original["fraud_flag"] = 1
     original["fraud_type"] = "duplicate_line_items"
-    clone["fraud_flag"]    = 1
-    clone["fraud_type"]    = "duplicate_line_items"
+    clone["fraud_flag"] = 1
+    clone["fraud_type"] = "duplicate_line_items"
 
     lines.append(clone)
 
@@ -146,7 +142,7 @@ def _unnecessary_operations(
     primary damage panel in the scenario.
     """
     lines: list[dict[str, Any]] = estimate["line_items"]
-    existing_panels: set[str]   = {l["panel"] for l in lines}
+    existing_panels: set[str] = {item["panel"] for item in lines}
 
     # Collect all panels adjacent to any already-damaged panel
     adjacent: set[str] = set()
@@ -164,23 +160,23 @@ def _unnecessary_operations(
 
     panel_idx: int = int(rng.integers(0, len(non_adjacent)))
     target_panel: str = non_adjacent[panel_idx]
-    operation: str    = "Blend" if rng.uniform(0, 1) < 0.5 else "Refinish"
+    operation: str = "Blend" if rng.uniform(0, 1) < 0.5 else "Refinish"
 
-    max_id: int = max((l["line_id"] for l in lines), default=0)
+    max_id: int = max((item["line_id"] for item in lines), default=0)
     labor_rate: float = lines[0]["labor_rate"] if lines else 78.0
 
     lines.append(
         {
-            "line_id":            max_id + 1,
-            "operation":          operation,
-            "panel":              target_panel,
-            "description":        f"{operation} {target_panel.replace('_', ' ')}",
-            "part":               None,
+            "line_id": max_id + 1,
+            "operation": operation,
+            "panel": target_panel,
+            "description": f"{operation} {target_panel.replace('_', ' ')}",
+            "part": None,
             "labor_hours_billed": round(rng.uniform(1.5, 2.5), 1),
-            "labor_hours_book":   round(rng.uniform(1.5, 2.5), 1),
-            "labor_rate":         labor_rate,
-            "fraud_flag":         1,
-            "fraud_type":         "unnecessary_operations",
+            "labor_hours_book": round(rng.uniform(1.5, 2.5), 1),
+            "labor_rate": labor_rate,
+            "fraud_flag": 1,
+            "fraud_type": "unnecessary_operations",
         }
     )
 
@@ -192,7 +188,7 @@ def _phantom_parts(
     """
     Add a phantom part that requires a feature absent from the vehicle's trim.
     """
-    trim: str            = estimate["vehicle"]["trim"]
+    trim: str = estimate["vehicle"]["trim"]
     trim_features: list[str] = TRIM_FEATURES.get(trim, [])
 
     # Find phantom parts whose required feature is NOT in trim_features
@@ -208,34 +204,34 @@ def _phantom_parts(
     part_name, _required = eligible[idx]
 
     phantom_prices: dict[str, float] = {
-        "parking_sensor_kit":     285.0,
-        "sunroof_glass":          420.0,
+        "parking_sensor_kit": 285.0,
+        "sunroof_glass": 420.0,
         "HID_headlight_assembly": 580.0,
-        "blind_spot_sensor":      195.0,
+        "blind_spot_sensor": 195.0,
         "adaptive_cruise_module": 340.0,
     }
-    oem_price: float  = phantom_prices.get(part_name, 250.0)
+    oem_price: float = phantom_prices.get(part_name, 250.0)
     lines: list[dict[str, Any]] = estimate["line_items"]
-    max_id: int = max((l["line_id"] for l in lines), default=0)
+    max_id: int = max((item["line_id"] for item in lines), default=0)
     labor_rate: float = lines[0]["labor_rate"] if lines else 78.0
 
     lines.append(
         {
-            "line_id":            max_id + 1,
-            "operation":          "Replace",
-            "panel":              "front_bumper",  # plausible mounting location
-            "description":        f"Replace {part_name.replace('_', ' ')}",
+            "line_id": max_id + 1,
+            "operation": "Replace",
+            "panel": "front_bumper",  # plausible mounting location
+            "description": f"Replace {part_name.replace('_', ' ')}",
             "part": {
-                "name":         part_name.replace("_", " "),
-                "oem_price":    oem_price,
+                "name": part_name.replace("_", " "),
+                "oem_price": oem_price,
                 "billed_price": oem_price,
-                "source":       "OEM",
+                "source": "OEM",
             },
             "labor_hours_billed": 0.5,
-            "labor_hours_book":   0.5,
-            "labor_rate":         labor_rate,
-            "fraud_flag":         1,
-            "fraud_type":         "phantom_parts",
+            "labor_hours_book": 0.5,
+            "labor_rate": labor_rate,
+            "fraud_flag": 1,
+            "fraud_type": "phantom_parts",
         }
     )
 
@@ -256,10 +252,10 @@ def _labor_parts_mismatch(
 
     line["labor_hours_billed"] = round(rng.uniform(7.0, 10.0), 1)
     line["part"] = {
-        "name":         "mirror cap",
-        "oem_price":    35.0,
+        "name": "mirror cap",
+        "oem_price": 35.0,
         "billed_price": 35.0,
-        "source":       "OEM",
+        "source": "OEM",
     }
     line["fraud_flag"] = 1
     line["fraud_type"] = "labor_parts_mismatch"

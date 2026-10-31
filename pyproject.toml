@@ -1,0 +1,24 @@
+[project]
+name = "claimguard"
+version = "0.1.0"
+requires-python = ">=3.11"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "S"]
+ignore = [
+    "E501",  # Line length handled by formatter
+    "E402",  # Module level import not at top of file (sys.path insertion needed for CLI scripts)
+    "S101",  # Assert used in pytest/tests
+    "S104",  # Possible binding to all interfaces (0.0.0.0 required for Docker containers)
+    "S311",  # Pseudo-random generators for synthetic estimate simulation
+    "S301",  # Pickle used for model artifact serialization
+    "S310",  # Audit URL open for http tests
+    "B905",  # zip() without explicit strict= parameter
+]
+
+[tool.ruff.format]
+quote-style = "double"

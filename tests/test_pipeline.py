@@ -10,6 +10,7 @@ Covers:
 
 Run with: pytest tests/ -v
 """
+
 from __future__ import annotations
 
 import json
@@ -123,15 +124,21 @@ FRAUDULENT_ESTIMATE_INFLATED_HOURS = {
 # Data generation tests
 # ---------------------------------------------------------------------------
 
+
 class TestDataGeneration:
     """Test synthetic data generation."""
 
     def test_pricing_module_imports(self) -> None:
         from pricing import (
-            VEHICLE_CLASSES, REGIONS, LABOR_RATES, PANELS,
-            OPERATIONS, PART_BASE_PRICES, BOOK_HOURS, ADJACENT_PANELS,
-            get_regional_part_price, get_book_hours,
+            BOOK_HOURS,
+            LABOR_RATES,
+            OPERATIONS,
+            PANELS,
+            PART_BASE_PRICES,
+            REGIONS,
+            VEHICLE_CLASSES,
         )
+
         assert len(VEHICLE_CLASSES) > 0
         assert len(REGIONS) == 5
         assert len(LABOR_RATES) == 5
@@ -142,16 +149,19 @@ class TestDataGeneration:
 
     def test_regional_part_price_positive(self) -> None:
         from pricing import get_regional_part_price
+
         price = get_regional_part_price("front_bumper", "compact", "midwest")
         assert price > 0, "Part price must be positive"
 
     def test_book_hours_positive(self) -> None:
         from pricing import get_book_hours
+
         hours = get_book_hours("R&R", "front_bumper")
         assert hours > 0, "Book hours must be positive"
 
     def test_scenarios_module(self) -> None:
         from scenarios import SCENARIOS, get_random_scenario
+
         assert len(SCENARIOS) >= 6
         scenario = get_random_scenario()
         assert hasattr(scenario, "name")
@@ -159,10 +169,8 @@ class TestDataGeneration:
         assert hasattr(scenario, "typical_operations")
 
     def test_clean_estimate_schema(self) -> None:
-        from pricing import REGIONS
-        from scenarios import get_random_scenario
         from generator import generate_estimate, get_shop_pool
-        import numpy as np
+        from scenarios import get_random_scenario
 
         rng = np.random.default_rng(42)
         shops = get_shop_pool()
@@ -187,8 +195,6 @@ class TestDataGeneration:
 
     def test_fraud_injector_inflated_hours(self) -> None:
         from fraud_injector import inject_fraud
-        from pricing import get_regional_part_price
-        import numpy as np
 
         rng = np.random.default_rng(100)
         estimate = json.loads(json.dumps(CLEAN_ESTIMATE))
@@ -210,7 +216,6 @@ class TestDataGeneration:
 
     def test_fraud_injector_part_price_markup(self) -> None:
         from fraud_injector import inject_fraud
-        import numpy as np
 
         rng = np.random.default_rng(200)
         estimate = json.loads(json.dumps(CLEAN_ESTIMATE))
@@ -226,14 +231,13 @@ class TestDataGeneration:
 
         for li in flagged:
             if li.get("part"):
-                ratio = li["part"]["billed_price"] / regional_medians.get(
-                    li["panel"], {}
-                ).get("compact", li["part"]["oem_price"])
+                ratio = li["part"]["billed_price"] / regional_medians.get(li["panel"], {}).get(
+                    "compact", li["part"]["oem_price"]
+                )
                 assert ratio >= 1.25
 
     def test_fraud_injector_duplicate_lines(self) -> None:
         from fraud_injector import inject_fraud
-        import numpy as np
 
         rng = np.random.default_rng(300)
         estimate = json.loads(json.dumps(CLEAN_ESTIMATE))
@@ -249,7 +253,6 @@ class TestDataGeneration:
 
     def test_fraud_injector_unnecessary_operations(self) -> None:
         from fraud_injector import inject_fraud
-        import numpy as np
 
         rng = np.random.default_rng(400)
         estimate = json.loads(json.dumps(CLEAN_ESTIMATE))
@@ -263,7 +266,6 @@ class TestDataGeneration:
 
     def test_fraud_injector_phantom_parts(self) -> None:
         from fraud_injector import inject_fraud
-        import numpy as np
 
         rng = np.random.default_rng(500)
         estimate = json.loads(json.dumps(CLEAN_ESTIMATE))
@@ -277,7 +279,6 @@ class TestDataGeneration:
 
     def test_fraud_injector_labor_parts_mismatch(self) -> None:
         from fraud_injector import inject_fraud
-        import numpy as np
 
         rng = np.random.default_rng(600)
         estimate = json.loads(json.dumps(CLEAN_ESTIMATE))
@@ -288,17 +289,18 @@ class TestDataGeneration:
         result = inject_fraud(estimate, ["labor_parts_mismatch"], rng, regional_medians)
         assert result["fraud_label"] == 1
         assert "labor_parts_mismatch" in result["fraud_types"]
-        flagged = [li for li in result["line_items"] if li.get("fraud_type") == "labor_parts_mismatch"]
+        flagged = [
+            li for li in result["line_items"] if li.get("fraud_type") == "labor_parts_mismatch"
+        ]
         assert len(flagged) > 0
         for li in flagged:
             assert li["labor_hours_billed"] >= 7.0
 
     def test_fraud_rate_accuracy(self) -> None:
         """Verify that fraud rate parameter is respected within ±2%."""
-        from scenarios import get_random_scenario
-        from generator import generate_estimate, get_shop_pool
         from fraud_injector import inject_fraud, sample_fraud_patterns
-        import numpy as np
+        from generator import generate_estimate, get_shop_pool
+        from scenarios import get_random_scenario
 
         rng = np.random.default_rng(42)
         shops = get_shop_pool()
@@ -333,12 +335,12 @@ class TestDataGeneration:
 # Feature engineering tests
 # ---------------------------------------------------------------------------
 
+
 class TestFeatureEngineering:
     """Test feature extraction."""
 
     def test_features_no_nans(self, tmp_path: Path) -> None:
         """Feature matrix must have zero NaN values."""
-        import pandas as pd
         sys.path.insert(0, str(ROOT / "features"))
         from build import build_features
 
@@ -353,7 +355,6 @@ class TestFeatureEngineering:
         assert X.isna().sum().sum() == 0, "NaNs found in feature matrix"
 
     def test_features_correct_length(self, tmp_path: Path) -> None:
-        import pandas as pd
         from build import build_features
 
         estimates = [CLEAN_ESTIMATE, FRAUDULENT_ESTIMATE_INFLATED_HOURS]
@@ -366,7 +367,6 @@ class TestFeatureEngineering:
         assert len(X) == len(y) == len(groups) == 2
 
     def test_label_alignment(self, tmp_path: Path) -> None:
-        import pandas as pd
         from build import build_features
 
         estimates = [CLEAN_ESTIMATE, FRAUDULENT_ESTIMATE_INFLATED_HOURS]
@@ -384,6 +384,7 @@ class TestFeatureEngineering:
 # API tests (requires running API server OR direct function tests)
 # ---------------------------------------------------------------------------
 
+
 class TestAPISchemas:
     """Test Pydantic schema validation without running server."""
 
@@ -396,15 +397,15 @@ class TestAPISchemas:
         assert len(est.line_items) == 1
 
     def test_invalid_estimate_missing_fields(self) -> None:
-        from schemas import EstimateIn
         from pydantic import ValidationError
+        from schemas import EstimateIn
 
         with pytest.raises(ValidationError):
             EstimateIn.model_validate({"estimate_id": "X"})  # missing required fields
 
     def test_invalid_labor_hours_too_high(self) -> None:
-        from schemas import EstimateIn
         from pydantic import ValidationError
+        from schemas import EstimateIn
 
         bad = json.loads(json.dumps(CLEAN_ESTIMATE))
         bad["line_items"][0]["labor_hours_billed"] = 999.0  # exceeds le=50
@@ -413,11 +414,13 @@ class TestAPISchemas:
             EstimateIn.model_validate(bad)
 
     def test_duplicate_line_ids_rejected(self) -> None:
-        from schemas import EstimateIn
         from pydantic import ValidationError
+        from schemas import EstimateIn
 
         bad = json.loads(json.dumps(CLEAN_ESTIMATE))
-        bad["line_items"].append(json.loads(json.dumps(bad["line_items"][0])))  # duplicate line_id=1
+        bad["line_items"].append(
+            json.loads(json.dumps(bad["line_items"][0]))
+        )  # duplicate line_id=1
 
         with pytest.raises(ValidationError):
             EstimateIn.model_validate(bad)
@@ -454,6 +457,7 @@ class TestAPISchemas:
 # Integration test (requires model artifacts + server)
 # ---------------------------------------------------------------------------
 
+
 class TestIntegration:
     """
     Integration tests that require the API server running.
@@ -464,11 +468,13 @@ class TestIntegration:
     @pytest.fixture
     def api_url(self) -> str:
         import os
+
         return os.getenv("API_URL", "http://localhost:8000")
 
     def _is_api_available(self, url: str) -> bool:
         try:
             import urllib.request
+
             urllib.request.urlopen(f"{url}/health", timeout=2)
             return True
         except Exception:
@@ -478,6 +484,7 @@ class TestIntegration:
         if not self._is_api_available(api_url):
             pytest.skip("API server not running")
         import urllib.request
+
         with urllib.request.urlopen(f"{api_url}/health") as resp:
             data = json.loads(resp.read())
         assert data["status"] == "ok"
@@ -486,6 +493,7 @@ class TestIntegration:
         if not self._is_api_available(api_url):
             pytest.skip("API server not running")
         import urllib.request
+
         body = json.dumps(CLEAN_ESTIMATE).encode()
         req = urllib.request.Request(
             f"{api_url}/predict",
@@ -502,6 +510,7 @@ class TestIntegration:
         if not self._is_api_available(api_url):
             pytest.skip("API server not running")
         import urllib.request
+
         body = json.dumps(FRAUDULENT_ESTIMATE_INFLATED_HOURS).encode()
         req = urllib.request.Request(
             f"{api_url}/predict",
@@ -519,8 +528,9 @@ class TestIntegration:
     def test_predict_422_on_bad_input(self, api_url: str) -> None:
         if not self._is_api_available(api_url):
             pytest.skip("API server not running")
-        import urllib.request
         import urllib.error
+        import urllib.request
+
         body = json.dumps({"estimate_id": "bad"}).encode()
         req = urllib.request.Request(
             f"{api_url}/predict",
@@ -535,6 +545,7 @@ class TestIntegration:
         if not self._is_api_available(api_url):
             pytest.skip("API server not running")
         import urllib.request
+
         batch = [CLEAN_ESTIMATE, FRAUDULENT_ESTIMATE_INFLATED_HOURS]
         body = json.dumps(batch).encode()
         req = urllib.request.Request(

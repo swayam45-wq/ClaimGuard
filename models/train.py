@@ -4,14 +4,14 @@ ClaimGuard XGBoost Fraud Classifier Training
 Uses GroupKFold by shop_id to prevent data leakage.
 Saves model JSON, SHAP explainer, and feature list to models/artifacts/.
 """
+
 from __future__ import annotations
 
 import argparse
 import json
-import os
 import pickle
 import warnings
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -28,6 +28,7 @@ warnings.filterwarnings("ignore", category=UserWarning)
 # ---------------------------------------------------------------------------
 # Data loading
 # ---------------------------------------------------------------------------
+
 
 def load_data(data_dir: str = "data/") -> tuple[pd.DataFrame, pd.Series, pd.Series]:
     """Load feature matrix, labels, and group (shop_id) series from parquet files.
@@ -48,6 +49,7 @@ def load_data(data_dir: str = "data/") -> tuple[pd.DataFrame, pd.Series, pd.Seri
 # ---------------------------------------------------------------------------
 # Shop-level aggregate feature engineering (leak-safe)
 # ---------------------------------------------------------------------------
+
 
 def compute_shop_features(
     X_train: pd.DataFrame,
@@ -80,8 +82,10 @@ def compute_shop_features(
     if "total_cost" in shop_df.columns:
         agg["total_cost"] = "mean"
 
-    shop_stats = shop_df.groupby("shop_id").agg(agg).rename(
-        columns={"label": "shop_fraud_rate", "total_cost": "shop_avg_total_cost"}
+    shop_stats = (
+        shop_df.groupby("shop_id")
+        .agg(agg)
+        .rename(columns={"label": "shop_fraud_rate", "total_cost": "shop_avg_total_cost"})
     )
     # Global fallbacks for unseen shops in eval
     global_fraud_rate: float = float(y_train.mean())
@@ -178,9 +182,7 @@ def cross_validate(
     gkf = GroupKFold(n_splits=n_splits)
 
     # Materialise all splits up-front so we can reuse them deterministically.
-    cv_splits: list[tuple[np.ndarray, np.ndarray]] = list(
-        gkf.split(X, y, groups)
-    )
+    cv_splits: list[tuple[np.ndarray, np.ndarray]] = list(gkf.split(X, y, groups))
 
     param_combinations = list(ParameterGrid(PARAM_GRID))
     print(f"Running CV over {len(param_combinations)} parameter combos × {n_splits} folds…")
@@ -191,16 +193,14 @@ def cross_validate(
 
     for combo_idx, params in enumerate(param_combinations, start=1):
         fold_scores: list[float] = []
-        for fold_idx, (train_idx, val_idx) in enumerate(cv_splits):
+        for _fold_idx, (train_idx, val_idx) in enumerate(cv_splits):
             X_tr, X_val = X.iloc[train_idx], X.iloc[val_idx]
             y_tr, y_val = y.iloc[train_idx], y.iloc[val_idx]
             grp_tr, grp_val = groups.iloc[train_idx], groups.iloc[val_idx]
 
             X_tr_aug, X_val_aug = compute_shop_features(X_tr, y_tr, X_val, grp_tr, grp_val)
 
-            score = _train_single_fold(
-                params, X_tr_aug, y_tr, X_val_aug, y_val, scale_pos_weight
-            )
+            score = _train_single_fold(params, X_tr_aug, y_tr, X_val_aug, y_val, scale_pos_weight)
             fold_scores.append(score)
 
         mean_score = float(np.mean(fold_scores))
@@ -219,6 +219,7 @@ def cross_validate(
 # ---------------------------------------------------------------------------
 # Final model training
 # ---------------------------------------------------------------------------
+
 
 def train_final_model(
     X: pd.DataFrame,
@@ -264,6 +265,7 @@ def train_final_model(
 # Artifact saving
 # ---------------------------------------------------------------------------
 
+
 def save_artifacts(
     booster: xgb.Booster,
     feature_names: list[str],
@@ -304,7 +306,7 @@ def save_artifacts(
     mean_score = float(np.mean(fold_scores))
     std_score = float(np.std(fold_scores))
     metadata: dict[str, Any] = {
-        "training_date": datetime.now(timezone.utc).isoformat(),
+        "training_date": datetime.now(UTC).isoformat(),
         "best_params": best_params,
         "cv_pr_auc_mean": round(mean_score, 6),
         "cv_pr_auc_std": round(std_score, 6),
@@ -328,10 +330,9 @@ def save_artifacts(
 # CLI entry point
 # ---------------------------------------------------------------------------
 
+
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(
-        description="Train ClaimGuard XGBoost fraud classifier."
-    )
+    parser = argparse.ArgumentParser(description="Train ClaimGuard XGBoost fraud classifier.")
     parser.add_argument(
         "--data",
         type=str,
@@ -370,9 +371,7 @@ def main() -> None:
 
     # ---- Cross-validation ------------------------------------------------
     print(f"\nRunning {args.n_splits}-fold GroupKFold CV…")
-    best_params, fold_scores, cv_splits = cross_validate(
-        X, y, groups, n_splits=args.n_splits
-    )
+    best_params, fold_scores, cv_splits = cross_validate(X, y, groups, n_splits=args.n_splits)
 
     mean_pr_auc = float(np.mean(fold_scores))
     std_pr_auc = float(np.std(fold_scores))

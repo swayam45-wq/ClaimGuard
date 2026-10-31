@@ -4,10 +4,11 @@ scenarios.py — Damage scenario definitions for ClaimGuard data generation.
 Each scenario captures a realistic collision/damage type with affected panels,
 typical repair operations, and expected total cost ranges.
 """
+
 from __future__ import annotations
 
 import random
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 
 @dataclass
@@ -17,7 +18,7 @@ class Scenario:
     name: str
     affected_panels: list[str]
     typical_operations: list[tuple[str, str]]  # (operation, panel)
-    expected_cost_range: tuple[float, float]   # (min_total $, max_total $)
+    expected_cost_range: tuple[float, float]  # (min_total $, max_total $)
     description: str
 
 
@@ -34,12 +35,12 @@ rear_end = Scenario(
         "right_taillight",
     ],
     typical_operations=[
-        ("R&R",     "rear_bumper"),
-        ("Repair",  "trunk_lid"),
+        ("R&R", "rear_bumper"),
+        ("Repair", "trunk_lid"),
         ("Replace", "left_taillight"),
         ("Replace", "right_taillight"),
-        ("Refinish","rear_bumper"),
-        ("Blend",   "left_quarter_panel"),
+        ("Refinish", "rear_bumper"),
+        ("Blend", "left_quarter_panel"),
     ],
     expected_cost_range=(800.0, 3500.0),
     description=(
@@ -59,15 +60,15 @@ front_impact = Scenario(
         "right_fender",
     ],
     typical_operations=[
-        ("R&R",     "front_bumper"),
-        ("Repair",  "hood"),
+        ("R&R", "front_bumper"),
+        ("Repair", "hood"),
         ("Replace", "left_headlight"),
         ("Replace", "right_headlight"),
-        ("Repair",  "left_fender"),
-        ("Repair",  "right_fender"),
-        ("Refinish","hood"),
-        ("Blend",   "left_fender"),
-        ("Blend",   "right_fender"),
+        ("Repair", "left_fender"),
+        ("Repair", "right_fender"),
+        ("Refinish", "hood"),
+        ("Blend", "left_fender"),
+        ("Blend", "right_fender"),
     ],
     expected_cost_range=(1500.0, 6500.0),
     description=(
@@ -84,10 +85,10 @@ side_swipe = Scenario(
         "left_mirror",
     ],
     typical_operations=[
-        ("R&R",     "left_mirror"),
-        ("Repair",  "left_door"),
-        ("Blend",   "left_fender"),
-        ("Refinish","left_door"),
+        ("R&R", "left_mirror"),
+        ("Repair", "left_door"),
+        ("Blend", "left_fender"),
+        ("Refinish", "left_door"),
     ],
     expected_cost_range=(600.0, 2800.0),
     description=(
@@ -104,12 +105,12 @@ hail = Scenario(
         "trunk_lid",
     ],
     typical_operations=[
-        ("Repair",  "hood"),
-        ("Repair",  "roof"),
-        ("Repair",  "trunk_lid"),
-        ("Refinish","hood"),
-        ("Refinish","roof"),
-        ("Refinish","trunk_lid"),
+        ("Repair", "hood"),
+        ("Repair", "roof"),
+        ("Repair", "trunk_lid"),
+        ("Refinish", "hood"),
+        ("Refinish", "roof"),
+        ("Refinish", "trunk_lid"),
     ],
     expected_cost_range=(1200.0, 5000.0),
     description=(
@@ -124,8 +125,8 @@ minor_scrape = Scenario(
         "front_bumper",
     ],
     typical_operations=[
-        ("Repair",  "front_bumper"),
-        ("Refinish","front_bumper"),
+        ("Repair", "front_bumper"),
+        ("Refinish", "front_bumper"),
     ],
     expected_cost_range=(150.0, 800.0),
     description=(
@@ -141,10 +142,10 @@ parking_lot = Scenario(
         "left_door",
     ],
     typical_operations=[
-        ("R&R",     "rear_bumper"),
-        ("R&R",     "left_door"),
-        ("Refinish","rear_bumper"),
-        ("Refinish","left_door"),
+        ("R&R", "rear_bumper"),
+        ("R&R", "left_door"),
+        ("Refinish", "rear_bumper"),
+        ("Refinish", "left_door"),
     ],
     expected_cost_range=(900.0, 3200.0),
     description=(
@@ -169,7 +170,7 @@ SCENARIOS: list[Scenario] = [
 _SCENARIO_MAP: dict[str, Scenario] = {s.name: s for s in SCENARIOS}
 
 
-def get_random_scenario(rng: "random.Random | None" = None) -> Scenario:
+def get_random_scenario(rng: random.Random | None = None) -> Scenario:
     """Return a uniformly random scenario."""
     if rng is not None:
         return rng.choice(SCENARIOS)
