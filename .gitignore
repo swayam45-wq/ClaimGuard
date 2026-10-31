@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Data & Model artifacts (generated locally)
+data/
+models/artifacts/*.json
+models/artifacts/*.pkl
+models/artifacts/*.png
+eval/outputs/
+
+# Environment
+.env
+*.env.local
+
+# Node / Next.js
+web/node_modules/
+web/.next/
+web/out/
+
+# OS
+.DS_Store
+Thumbs.db
