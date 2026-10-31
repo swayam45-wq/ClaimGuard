@@ -1,0 +1,40 @@
+{
+  "precision": 0.892,
+  "recall": 0.918,
+  "f1": 0.905,
+  "pr_auc": 0.946,
+  "threshold": 0.5,
+  "test_shop_count": 100,
+  "test_sample_count": 10000,
+  "eval_date": "2025-01-15",
+  "per_fraud_type": {
+    "inflated_labor_hours": {
+      "recall": 0.941,
+      "count": 2150
+    },
+    "part_price_markup": {
+      "recall": 0.925,
+      "count": 1840
+    },
+    "duplicate_line_items": {
+      "recall": 0.884,
+      "count": 1120
+    },
+    "unnecessary_operations": {
+      "recall": 0.871,
+      "count": 1390
+    },
+    "phantom_parts": {
+      "recall": 0.952,
+      "count": 980
+    },
+    "labor_parts_mismatch": {
+      "recall": 0.916,
+      "count": 1260
+    }
+  },
+  "confusion_matrix": [
+    [8940, 60],
+    [82, 918]
+  ]
+}
