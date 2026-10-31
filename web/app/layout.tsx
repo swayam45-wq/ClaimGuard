@@ -104,18 +104,7 @@ function NavLink({
   return (
     <Link
       href={href}
-      className="flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-medium"
-      style={{
-        color: "#94a3b8",
-      }}
-      onMouseEnter={(e) => {
-        (e.currentTarget as HTMLAnchorElement).style.color = "#f1f5f9";
-        (e.currentTarget as HTMLAnchorElement).style.backgroundColor = "#1e293b";
-      }}
-      onMouseLeave={(e) => {
-        (e.currentTarget as HTMLAnchorElement).style.color = "#94a3b8";
-        (e.currentTarget as HTMLAnchorElement).style.backgroundColor = "transparent";
-      }}
+      className="flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-medium text-slate-400 hover:text-slate-100 hover:bg-slate-800/80 transition-colors"
     >
       {icon}
       {label}
