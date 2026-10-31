@@ -1,0 +1,4 @@
+pandas==2.2.2
+numpy==1.26.4
+rapidfuzz==3.9.3
+faker==25.2.0
