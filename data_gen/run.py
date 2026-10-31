@@ -184,9 +184,8 @@ def main(argv: list[str] | None = None) -> None:
             )
 
             # --- Inject fraud with probability fraud_rate -------------------
-            is_fraud: bool = bool(rng.uniform(0.0, 1.0) < fraud_rate)
-            if is_fraud:
-                patterns: list[str] = sample_fraud_patterns(fraud_rate, rng)
+            patterns: list[str] = sample_fraud_patterns(fraud_rate, rng)
+            if patterns:
                 est = inject_fraud(est, patterns, rng, regional_medians)
                 fraud_count += 1
                 for p in patterns:

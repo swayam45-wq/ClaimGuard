@@ -37,18 +37,15 @@ def sample_fraud_patterns(
     rng: np.random.Generator,
 ) -> list[str]:
     """
-    Return a random subset of 1-3 fraud patterns if this estimate is flagged
-    as fraudulent (determined externally by comparing rng draw to fraud_rate),
-    or an empty list for a clean estimate.
-
-    Callers should gate on the fraud decision themselves; this function simply
-    samples *which* patterns to apply given that fraud has already been decided.
+    Return a random subset of 1-3 fraud patterns with probability fraud_rate,
+    or an empty list [] for a clean estimate.
     """
+    if rng.uniform(0.0, 1.0) >= fraud_rate:
+        return []
     n_patterns: int = int(rng.integers(1, 4))  # 1, 2, or 3
-    chosen = list(
+    return list(
         rng.choice(ALL_FRAUD_PATTERNS, size=n_patterns, replace=False)  # type: ignore[arg-type]
     )
-    return chosen
 
 
 # ---------------------------------------------------------------------------

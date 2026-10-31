@@ -19,7 +19,20 @@ from typing import Any
 
 import numpy as np
 import pandas as pd
-from rapidfuzz import fuzz
+
+try:
+    from rapidfuzz import fuzz
+
+    def _fuzzy_score(a: str, b: str) -> float:
+        return float(fuzz.token_sort_ratio(a, b))
+except ImportError:
+    from difflib import SequenceMatcher
+
+    def _fuzzy_score(a: str, b: str) -> float:
+        sa = " ".join(sorted(a.lower().split()))
+        sb = " ".join(sorted(b.lower().split()))
+        return SequenceMatcher(None, sa, sb).ratio() * 100.0
+
 
 # ---------------------------------------------------------------------------
 # Adjacency map for body panels (CIECA BMS-inspired)
@@ -123,7 +136,7 @@ def _duplicate_sim_score(descriptions: list[str]) -> float:
         return 0.0
     max_score = 0.0
     for a, b in combinations(descriptions, 2):
-        score = fuzz.token_sort_ratio(a, b)
+        score = _fuzzy_score(a, b)
         if score > max_score:
             max_score = score
     return max_score / 100.0
