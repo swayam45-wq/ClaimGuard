@@ -41,7 +41,7 @@ ClaimGuard detects fraudulent and inflated line items in auto repair estimates u
 ### 1. Clone & configure
 
 ```bash
-git clone https://github.com/patelswayam88/ClaimGuard.git
+git clone https://github.com/swayam45-wq/ClaimGuard.git
 cd ClaimGuard
 cp .env.example .env            # edit if needed
 cp api/.env.example api/.env
