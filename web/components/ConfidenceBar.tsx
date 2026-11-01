@@ -15,30 +15,29 @@ export function ConfidenceBar({
   const percent = Math.round(clamped * 100);
 
   const barColor =
-    clamped >= 0.7 ? "#e03131" : clamped >= 0.4 ? "#f59f00" : "#2f9e44";
+    clamped >= 0.7 ? "#dc2626" : clamped >= 0.4 ? "#f59f00" : "#16a34a";
 
   return (
     <div className="w-full">
       {(label || showPercent) && (
         <div className="flex items-center justify-between mb-1.5 text-xs">
           {label && (
-            <span className="font-medium" style={{ color: "#94a3b8" }}>
+            <span className="font-semibold text-slate-600">
               {label}
             </span>
           )}
           {showPercent && (
-            <span className="font-mono font-semibold" style={{ color: barColor }}>
+            <span className="font-mono font-bold" style={{ color: barColor }}>
               {percent}%
             </span>
           )}
         </div>
       )}
       <div
-        className="w-full h-2 rounded-full overflow-hidden"
-        style={{ backgroundColor: "#1e293b" }}
+        className="w-full h-2 rounded-full overflow-hidden bg-slate-200"
       >
         <div
-          className="h-full rounded-full transition-all duration-300"
+          className="h-full rounded-full transition-all duration-500 ease-out"
           style={{
             width: `${percent}%`,
             backgroundColor: barColor,

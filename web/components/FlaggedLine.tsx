@@ -1,6 +1,7 @@
 "use client";
 
 import { ChevronDown, ChevronUp, AlertCircle, ShieldAlert } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { ConfidenceBar } from "./ConfidenceBar";
 
 interface FlaggedLineProps {
@@ -34,38 +35,37 @@ export function FlaggedLine({
 
   return (
     <div
-      className="rounded-xl overflow-hidden border transition-all"
+      className="rounded-2xl overflow-hidden border transition-all shadow-sm"
       style={{
-        backgroundColor: "#0f1f3d",
-        borderColor: isExpanded ? "#e03131" : "#1e3a5f",
+        backgroundColor: "#ffffff",
+        borderColor: isExpanded ? "#f87171" : "#e2e8f0",
       }}
     >
       <button
         onClick={onToggle}
-        className="w-full p-4 flex items-center justify-between text-left transition-colors"
+        className="w-full p-4 sm:p-5 flex items-center justify-between text-left transition-colors hover:bg-slate-50"
         style={{
-          backgroundColor: isExpanded ? "#1e1427" : "#0f1f3d",
+          backgroundColor: isExpanded ? "#fff7ed" : "#ffffff",
         }}
       >
         <div className="flex items-center gap-3 flex-wrap">
           <div
-            className="p-1.5 rounded-lg shrink-0"
-            style={{ backgroundColor: "#450a0a", border: "1px solid #7f1d1d" }}
+            className="p-2 rounded-xl shrink-0"
+            style={{ backgroundColor: "#fee2e2", border: "1px solid #fecaca" }}
           >
-            <ShieldAlert className="h-4 w-4 text-red-400" />
+            <ShieldAlert className="h-5 w-5 text-red-600" />
           </div>
           <div>
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="font-mono text-sm font-semibold" style={{ color: "#93c5fd" }}>
+              <span className="font-mono text-sm font-bold text-brand-600">
                 Line #{lineId}
               </span>
-              <span className="text-sm font-semibold text-slate-100">
+              <span className="text-sm font-bold text-navy-900">
                 {displayTitle}
               </span>
               {fraudTypes.length > 1 && (
                 <span
-                  className="text-xs px-2 py-0.5 rounded-full font-medium"
-                  style={{ backgroundColor: "#334155", color: "#cbd5e1" }}
+                  className="text-xs px-2.5 py-0.5 rounded-full font-semibold bg-slate-100 text-slate-700 border border-slate-200"
                 >
                   +{fraudTypes.length - 1} more
                 </span>
@@ -88,51 +88,58 @@ export function FlaggedLine({
         </div>
       </button>
 
-      {isExpanded && (
-        <div
-          className="p-5 border-t space-y-4"
-          style={{
-            backgroundColor: "#081326",
-            borderColor: "#1e3a5f",
-          }}
-        >
-          {/* Mobile confidence bar */}
-          <div className="sm:hidden">
-            <ConfidenceBar value={confidence} label="Line Suspicion Confidence" />
-          </div>
-
-          <div>
-            <h4 className="text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: "#94a3b8" }}>
-              Identified Fraud Patterns
-            </h4>
-            <div className="flex flex-wrap gap-2 mt-1.5">
-              {fraudTypes.map((t) => (
-                <span
-                  key={t}
-                  className="text-xs px-2.5 py-1 rounded-md font-medium"
-                  style={{ backgroundColor: "#7f1d1d", color: "#fca5a5" }}
-                >
-                  {FRAUD_TYPE_LABELS[t] ?? t}
-                </span>
-              ))}
-            </div>
-          </div>
-
-          <div
-            className="p-3.5 rounded-lg border flex items-start gap-3"
-            style={{
-              backgroundColor: "#111827",
-              borderColor: "#374151",
-            }}
+      <AnimatePresence initial={false}>
+        {isExpanded && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+            className="overflow-hidden"
           >
-            <AlertCircle className="h-4 w-4 text-blue-400 shrink-0 mt-0.5" />
-            <div className="text-sm leading-relaxed text-slate-200">
-              <span className="font-semibold text-white block mb-0.5">SHAP-Derived Explanation:</span>
-              {explanation}
+            <div
+              className="p-5 border-t space-y-4"
+              style={{
+                backgroundColor: "#fafbfc",
+                borderColor: "#e2e8f0",
+              }}
+            >
+              {/* Mobile confidence bar */}
+              <div className="sm:hidden">
+                <ConfidenceBar value={confidence} label="Line Suspicion Confidence" />
+              </div>
+
+              <div>
+                <h4 className="text-xs font-bold uppercase tracking-wider mb-2 text-slate-500">
+                  Identified Fraud Patterns
+                </h4>
+                <div className="flex flex-wrap gap-2">
+                  {fraudTypes.map((t) => (
+                    <span
+                      key={t}
+                      className="text-xs px-3 py-1 rounded-lg font-semibold border"
+                      style={{ backgroundColor: "#fef2f2", borderColor: "#fecaca", color: "#b91c1c" }}
+                    >
+                      {FRAUD_TYPE_LABELS[t] ?? t}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              <div
+                className="p-4 rounded-xl border flex items-start gap-3 bg-white"
+                style={{ borderColor: "#e2e8f0" }}
+              >
+                <AlertCircle className="h-5 w-5 text-brand-500 shrink-0 mt-0.5" />
+                <div className="text-sm leading-relaxed text-slate-700">
+                  <span className="font-bold text-navy-900 block mb-0.5">SHAP-Derived Explanation:</span>
+                  {explanation}
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
-      )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

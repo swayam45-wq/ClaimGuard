@@ -97,14 +97,14 @@ export function MetricsCharts({ metrics, featureNames = [] }: MetricsChartsProps
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Per-Fraud-Type Recall Chart */}
         <div
-          className="p-6 rounded-2xl border"
-          style={{ backgroundColor: "#0f1f3d", borderColor: "#1e3a5f" }}
+          className="p-6 rounded-2xl border shadow-sm bg-white"
+          style={{ borderColor: "#e2e8f0" }}
         >
           <div className="mb-4">
-            <h3 className="text-base font-semibold text-slate-100">
+            <h3 className="text-base font-bold text-navy-900">
               Per-Fraud-Type Recall Rate
             </h3>
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-slate-500">
               Sensitivity across all six CIECA BMS synthetic fraud patterns
             </p>
           </div>
@@ -113,18 +113,18 @@ export function MetricsCharts({ metrics, featureNames = [] }: MetricsChartsProps
             <div className="h-64 w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={perFraudData} layout="vertical" margin={{ left: 20, right: 20, top: 10, bottom: 10 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" horizontal={false} />
-                  <XAxis type="number" domain={[0, 100]} unit="%" stroke="#64748b" tick={{ fill: "#64748b", fontSize: 12 }} />
-                  <YAxis type="category" dataKey="name" stroke="#64748b" tick={{ fill: "#cbd5e1", fontSize: 11 }} width={110} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" horizontal={false} />
+                  <XAxis type="number" domain={[0, 100]} unit="%" stroke="#94a3b8" tick={{ fill: "#64748b", fontSize: 12 }} />
+                  <YAxis type="category" dataKey="name" stroke="#94a3b8" tick={{ fill: "#334155", fontSize: 11 }} width={110} />
                   <Tooltip
-                    contentStyle={{ backgroundColor: "#0c1526", borderColor: "#1e3a5f", borderRadius: "8px", color: "#f1f5f9" }}
+                    contentStyle={{ backgroundColor: "#ffffff", borderColor: "#e2e8f0", borderRadius: "8px", color: "#0d1b2e", boxShadow: "0 4px 12px rgba(0,0,0,0.08)" }}
                     formatter={(val: number) => [`${val}%`, "Recall"]}
                   />
                   <Bar dataKey="recallPct" radius={[0, 4, 4, 0]}>
                     {perFraudData.map((entry, index) => (
                       <Cell
                         key={`cell-${index}`}
-                        fill={entry.recallPct >= 85 ? "#2f9e44" : entry.recallPct >= 70 ? "#f59f00" : "#e03131"}
+                        fill={entry.recallPct >= 85 ? "#16a34a" : entry.recallPct >= 70 ? "#f59f00" : "#dc2626"}
                       />
                     ))}
                   </Bar>
@@ -132,7 +132,7 @@ export function MetricsCharts({ metrics, featureNames = [] }: MetricsChartsProps
               </ResponsiveContainer>
             </div>
           ) : (
-            <div className="h-64 flex items-center justify-center text-slate-500 text-sm">
+            <div className="h-64 flex items-center justify-center text-slate-400 text-sm">
               Run evaluation pipeline to populate per-fraud metrics.
             </div>
           )}
@@ -140,61 +140,61 @@ export function MetricsCharts({ metrics, featureNames = [] }: MetricsChartsProps
 
         {/* Confusion Matrix */}
         <div
-          className="p-6 rounded-2xl border"
-          style={{ backgroundColor: "#0f1f3d", borderColor: "#1e3a5f" }}
+          className="p-6 rounded-2xl border shadow-sm bg-white"
+          style={{ borderColor: "#e2e8f0" }}
         >
           <div className="mb-4">
-            <h3 className="text-base font-semibold text-slate-100">
+            <h3 className="text-base font-bold text-navy-900">
               Evaluation Confusion Matrix
             </h3>
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-slate-500">
               Tested on held-out shop clusters (GroupKFold isolated)
             </p>
           </div>
 
           <div className="grid grid-cols-2 gap-3 mt-4">
             {/* True Negative */}
-            <div className="p-4 rounded-xl border border-emerald-900/60 bg-emerald-950/30 text-center">
-              <span className="text-xs font-semibold text-emerald-400 block uppercase tracking-wider">
+            <div className="p-4 rounded-xl border border-emerald-200 bg-emerald-50 text-center">
+              <span className="text-xs font-bold text-emerald-800 block uppercase tracking-wider">
                 True Clean (TN)
               </span>
-              <span className="text-3xl font-mono font-bold text-emerald-300 mt-1 block">
+              <span className="text-3xl font-mono font-extrabold text-emerald-700 mt-1 block">
                 {tn.toLocaleString()}
               </span>
-              <span className="text-xs text-slate-400 mt-1 block">Correctly Passed</span>
+              <span className="text-xs text-emerald-600 mt-1 block">Correctly Passed</span>
             </div>
 
             {/* False Positive */}
-            <div className="p-4 rounded-xl border border-red-900/60 bg-red-950/30 text-center">
-              <span className="text-xs font-semibold text-red-400 block uppercase tracking-wider">
+            <div className="p-4 rounded-xl border border-red-200 bg-red-50 text-center">
+              <span className="text-xs font-bold text-red-800 block uppercase tracking-wider">
                 False Alarm (FP)
               </span>
-              <span className="text-3xl font-mono font-bold text-red-300 mt-1 block">
+              <span className="text-3xl font-mono font-extrabold text-red-700 mt-1 block">
                 {fp.toLocaleString()}
               </span>
-              <span className="text-xs text-slate-400 mt-1 block">Clean Flagged as Fraud</span>
+              <span className="text-xs text-red-600 mt-1 block">Clean Flagged as Fraud</span>
             </div>
 
             {/* False Negative */}
-            <div className="p-4 rounded-xl border border-amber-900/60 bg-amber-950/30 text-center">
-              <span className="text-xs font-semibold text-amber-400 block uppercase tracking-wider">
+            <div className="p-4 rounded-xl border border-amber-200 bg-amber-50 text-center">
+              <span className="text-xs font-bold text-amber-800 block uppercase tracking-wider">
                 Missed Fraud (FN)
               </span>
-              <span className="text-3xl font-mono font-bold text-amber-300 mt-1 block">
+              <span className="text-3xl font-mono font-extrabold text-amber-700 mt-1 block">
                 {fn.toLocaleString()}
               </span>
-              <span className="text-xs text-slate-400 mt-1 block">Undetected Fraud</span>
+              <span className="text-xs text-amber-600 mt-1 block">Undetected Fraud</span>
             </div>
 
             {/* True Positive */}
-            <div className="p-4 rounded-xl border border-blue-900/60 bg-blue-950/30 text-center">
-              <span className="text-xs font-semibold text-blue-400 block uppercase tracking-wider">
+            <div className="p-4 rounded-xl border border-blue-200 bg-blue-50 text-center">
+              <span className="text-xs font-bold text-blue-800 block uppercase tracking-wider">
                 Caught Fraud (TP)
               </span>
-              <span className="text-3xl font-mono font-bold text-blue-300 mt-1 block">
+              <span className="text-3xl font-mono font-extrabold text-blue-700 mt-1 block">
                 {tp.toLocaleString()}
               </span>
-              <span className="text-xs text-slate-400 mt-1 block">Fraud Blocked</span>
+              <span className="text-xs text-blue-600 mt-1 block">Fraud Blocked</span>
             </div>
           </div>
         </div>
@@ -204,14 +204,14 @@ export function MetricsCharts({ metrics, featureNames = [] }: MetricsChartsProps
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Precision-Recall Curve */}
         <div
-          className="p-6 rounded-2xl border"
-          style={{ backgroundColor: "#0f1f3d", borderColor: "#1e3a5f" }}
+          className="p-6 rounded-2xl border shadow-sm bg-white"
+          style={{ borderColor: "#e2e8f0" }}
         >
           <div className="mb-4">
-            <h3 className="text-base font-semibold text-slate-100">
+            <h3 className="text-base font-bold text-navy-900">
               Precision-Recall Profile (PR-AUC: {metrics.pr_auc.toFixed(3)})
             </h3>
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-slate-500">
               Area under curve measuring precision stability as recall scales
             </p>
           </div>
@@ -219,14 +219,14 @@ export function MetricsCharts({ metrics, featureNames = [] }: MetricsChartsProps
           <div className="h-64 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={prCurveData} margin={{ left: 10, right: 20, top: 10, bottom: 10 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
-                <XAxis dataKey="recall" domain={[0, 1]} tick={{ fill: "#64748b", fontSize: 12 }} stroke="#64748b" label={{ value: "Recall", position: "insideBottom", offset: -5, fill: "#64748b", fontSize: 12 }} />
-                <YAxis domain={[0.6, 1.0]} tick={{ fill: "#64748b", fontSize: 12 }} stroke="#64748b" label={{ value: "Precision", angle: -90, position: "insideLeft", fill: "#64748b", fontSize: 12 }} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                <XAxis dataKey="recall" domain={[0, 1]} tick={{ fill: "#64748b", fontSize: 12 }} stroke="#94a3b8" label={{ value: "Recall", position: "insideBottom", offset: -5, fill: "#64748b", fontSize: 12 }} />
+                <YAxis domain={[0.6, 1.0]} tick={{ fill: "#64748b", fontSize: 12 }} stroke="#94a3b8" label={{ value: "Precision", angle: -90, position: "insideLeft", fill: "#64748b", fontSize: 12 }} />
                 <Tooltip
-                  contentStyle={{ backgroundColor: "#0c1526", borderColor: "#1e3a5f", borderRadius: "8px", color: "#f1f5f9" }}
+                  contentStyle={{ backgroundColor: "#ffffff", borderColor: "#e2e8f0", borderRadius: "8px", color: "#0d1b2e", boxShadow: "0 4px 12px rgba(0,0,0,0.08)" }}
                   formatter={(val: number) => [val.toFixed(3), "Precision"]}
                 />
-                <Line type="monotone" dataKey="precision" stroke="#3b5bdb" strokeWidth={3} dot={{ fill: "#93c5fd", r: 4 }} activeDot={{ r: 6 }} />
+                <Line type="monotone" dataKey="precision" stroke="#0066cc" strokeWidth={3} dot={{ fill: "#4d9be8", r: 4 }} activeDot={{ r: 6 }} />
               </LineChart>
             </ResponsiveContainer>
           </div>
@@ -234,14 +234,14 @@ export function MetricsCharts({ metrics, featureNames = [] }: MetricsChartsProps
 
         {/* SHAP Feature Importance */}
         <div
-          className="p-6 rounded-2xl border"
-          style={{ backgroundColor: "#0f1f3d", borderColor: "#1e3a5f" }}
+          className="p-6 rounded-2xl border shadow-sm bg-white"
+          style={{ borderColor: "#e2e8f0" }}
         >
           <div className="mb-4">
-            <h3 className="text-base font-semibold text-slate-100">
+            <h3 className="text-base font-bold text-navy-900">
               SHAP Top Feature Importance
             </h3>
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-slate-500">
               Relative global impact on TreeExplainer decision boundary
             </p>
           </div>
@@ -249,14 +249,14 @@ export function MetricsCharts({ metrics, featureNames = [] }: MetricsChartsProps
           <div className="h-64 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={featureChartData} layout="vertical" margin={{ left: 20, right: 20, top: 10, bottom: 10 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" horizontal={false} />
-                <XAxis type="number" stroke="#64748b" tick={{ fill: "#64748b", fontSize: 12 }} />
-                <YAxis type="category" dataKey="name" stroke="#64748b" tick={{ fill: "#cbd5e1", fontSize: 11 }} width={140} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" horizontal={false} />
+                <XAxis type="number" stroke="#94a3b8" tick={{ fill: "#64748b", fontSize: 12 }} />
+                <YAxis type="category" dataKey="name" stroke="#94a3b8" tick={{ fill: "#334155", fontSize: 11 }} width={140} />
                 <Tooltip
-                  contentStyle={{ backgroundColor: "#0c1526", borderColor: "#1e3a5f", borderRadius: "8px", color: "#f1f5f9" }}
+                  contentStyle={{ backgroundColor: "#ffffff", borderColor: "#e2e8f0", borderRadius: "8px", color: "#0d1b2e", boxShadow: "0 4px 12px rgba(0,0,0,0.08)" }}
                   formatter={(val: number) => [val.toFixed(3), "Mean |SHAP|"]}
                 />
-                <Bar dataKey="importance" fill="#6366f1" radius={[0, 4, 4, 0]} />
+                <Bar dataKey="importance" fill="#4d9be8" radius={[0, 4, 4, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>

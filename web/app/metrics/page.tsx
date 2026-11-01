@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
 import {
   Activity,
   Award,
@@ -32,6 +33,45 @@ interface ModelInfoResponse {
   };
   best_params: Record<string, string | number | boolean>;
 }
+
+const STAT_CARDS = [
+  {
+    key: "f1" as const,
+    label: "F1 Score",
+    sub: "Target: ≥ 0.850 on held-out shops",
+    icon: Award,
+    color: "#16a34a",
+    bg: "#f0fdf4",
+    border: "#bbf7d0",
+  },
+  {
+    key: "pr_auc" as const,
+    label: "PR-AUC",
+    sub: "Precision-Recall Area under curve",
+    icon: Activity,
+    color: "#0066cc",
+    bg: "#e8f1fb",
+    border: "#c3d9f5",
+  },
+  {
+    key: "precision" as const,
+    label: "Precision",
+    sub: "At optimal fraud threshold",
+    icon: CheckCircle2,
+    color: "#7c3aed",
+    bg: "#faf5ff",
+    border: "#ddd6fe",
+  },
+  {
+    key: "recall" as const,
+    label: "Recall",
+    sub: "Overall fraud detection coverage",
+    icon: Activity,
+    color: "#d97706",
+    bg: "#fffbeb",
+    border: "#fde68a",
+  },
+];
 
 export default function MetricsPage() {
   const [data, setData] = useState<ModelInfoResponse | null>(null);
@@ -65,208 +105,219 @@ export default function MetricsPage() {
   }, []);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-      {/* Page Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span
-              className="text-xs font-semibold px-2.5 py-0.5 rounded-full uppercase tracking-wider"
-              style={{ backgroundColor: "#1e3a5f", color: "#93c5fd" }}
-            >
-              Model Performance
-            </span>
-            <span className="text-xs text-slate-400">
-              CIECA BMS Benchmark
-            </span>
-          </div>
-          <h1 className="text-3xl font-extrabold text-slate-100 tracking-tight">
-            Classifier & Explainer Evaluation
-          </h1>
-          <p className="text-sm text-slate-400 mt-1">
-            Evaluated on held-out repair shop clusters with zero shop leakage across GroupKFold splits.
-          </p>
-        </div>
+    <div className="bg-white min-h-screen">
+      {/* Page hero strip */}
+      <div
+        className="border-b py-12"
+        style={{
+          background: "linear-gradient(135deg, #0d1b2e 0%, #0f2a5c 100%)",
+          borderColor: "#1b3a6b",
+        }}
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5"
+          >
+            <div>
+              <span
+                className="text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full inline-block mb-4"
+                style={{ backgroundColor: "rgba(77,155,232,0.18)", color: "#93c5fd" }}
+              >
+                Model Performance · CIECA BMS Benchmark
+              </span>
+              <h1 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight mb-2">
+                Classifier &amp; Explainer Evaluation
+              </h1>
+              <p className="text-sm" style={{ color: "#93c5fd" }}>
+                Evaluated on held-out repair shop clusters with zero shop leakage across GroupKFold splits.
+              </p>
+            </div>
 
-        <button
-          onClick={fetchModelInfo}
-          disabled={loading}
-          className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium border border-slate-700 bg-slate-900/60 hover:bg-slate-800 text-slate-200 transition-colors disabled:opacity-50"
-        >
-          <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
-          Refresh Metrics
-        </button>
+            <button
+              onClick={fetchModelInfo}
+              disabled={loading}
+              className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold border transition-all hover:opacity-80 disabled:opacity-50 shrink-0"
+              style={{
+                borderColor: "rgba(147,197,253,0.3)",
+                color: "#93c5fd",
+                backgroundColor: "rgba(77,155,232,0.1)",
+              }}
+            >
+              <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+              Refresh Metrics
+            </button>
+          </motion.div>
+        </div>
       </div>
 
-      {/* Loading state */}
-      {loading && !data && (
-        <div className="py-24 text-center">
-          <div
-            className="h-10 w-10 border-4 border-t-transparent rounded-full animate-spin mx-auto mb-4"
-            style={{ borderColor: "#3b5bdb", borderTopColor: "transparent" }}
-          />
-          <p className="text-slate-400 text-sm">Querying model artifacts from API...</p>
-        </div>
-      )}
-
-      {/* Error state */}
-      {error && !data && (
-        <div
-          className="p-6 rounded-2xl border mb-8 flex items-start gap-4"
-          style={{ backgroundColor: "#450a0a22", borderColor: "#7f1d1d" }}
-        >
-          <AlertCircle className="h-6 w-6 text-red-400 shrink-0 mt-0.5" />
-          <div>
-            <h3 className="text-sm font-semibold text-red-300">
-              Could not retrieve model metrics
-            </h3>
-            <p className="text-xs text-red-200/80 mt-1">
-              {error}
-            </p>
-            <p className="text-xs text-slate-400 mt-2">
-              Ensure the FastAPI service is running (`uvicorn api.main:app`) and the model has been trained.
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        {/* Loading state */}
+        {loading && !data && (
+          <div className="py-24 text-center">
+            <div
+              className="h-10 w-10 border-4 border-t-transparent rounded-full animate-spin mx-auto mb-4"
+              style={{ borderColor: "#0066cc", borderTopColor: "transparent" }}
+            />
+            <p className="text-sm" style={{ color: "#64748b" }}>
+              Querying model artifacts from API...
             </p>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Main Content */}
-      {data && (
-        <div className="space-y-8">
-          {/* Key Stat Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div
-              className="p-5 rounded-2xl border"
-              style={{ backgroundColor: "#0f1f3d", borderColor: "#1e3a5f" }}
-            >
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                  F1 Score
-                </span>
-                <Award className="h-4 w-4 text-emerald-400" />
-              </div>
-              <div className="text-3xl font-extrabold font-mono text-emerald-400">
-                {(data.metrics.f1 ?? 0.89).toFixed(3)}
-              </div>
-              <p className="text-xs text-slate-400 mt-1">
-                Target: ≥ 0.850 on held-out shops
-              </p>
-            </div>
-
-            <div
-              className="p-5 rounded-2xl border"
-              style={{ backgroundColor: "#0f1f3d", borderColor: "#1e3a5f" }}
-            >
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                  PR-AUC
-                </span>
-                <Activity className="h-4 w-4 text-blue-400" />
-              </div>
-              <div className="text-3xl font-extrabold font-mono text-blue-400">
-                {(data.metrics.pr_auc ?? 0.94).toFixed(3)}
-              </div>
-              <p className="text-xs text-slate-400 mt-1">
-                Precision-Recall Area under curve
-              </p>
-            </div>
-
-            <div
-              className="p-5 rounded-2xl border"
-              style={{ backgroundColor: "#0f1f3d", borderColor: "#1e3a5f" }}
-            >
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                  Precision
-                </span>
-                <CheckCircle2 className="h-4 w-4 text-indigo-400" />
-              </div>
-              <div className="text-3xl font-extrabold font-mono text-indigo-300">
-                {(data.metrics.precision ?? 0.88).toFixed(3)}
-              </div>
-              <p className="text-xs text-slate-400 mt-1">
-                At fraud threshold {data.metrics.threshold ?? 0.5}
-              </p>
-            </div>
-
-            <div
-              className="p-5 rounded-2xl border"
-              style={{ backgroundColor: "#0f1f3d", borderColor: "#1e3a5f" }}
-            >
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                  Recall
-                </span>
-                <Activity className="h-4 w-4 text-purple-400" />
-              </div>
-              <div className="text-3xl font-extrabold font-mono text-purple-300">
-                {(data.metrics.recall ?? 0.91).toFixed(3)}
-              </div>
-              <p className="text-xs text-slate-400 mt-1">
-                Overall fraud detection coverage
-              </p>
-            </div>
-          </div>
-
-          {/* Charts (Confusion matrix, PR curve, Per-fraud recall, SHAP importance) */}
-          <MetricsCharts
-            metrics={data.metrics}
-            featureNames={data.feature_names}
-          />
-
-          {/* Model Info Details */}
-          <div
-            className="p-6 rounded-2xl border"
-            style={{ backgroundColor: "#0f1f3d", borderColor: "#1e3a5f" }}
+        {/* Error state */}
+        {error && !data && (
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="p-6 rounded-2xl border mb-8 flex items-start gap-4"
+            style={{ backgroundColor: "#fef2f2", borderColor: "#fecaca" }}
           >
-            <h3 className="text-base font-semibold text-slate-100 mb-4 flex items-center gap-2">
-              <Sliders className="h-4 w-4 text-blue-400" />
-              Model Architecture & Training Metadata
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm">
-              <div>
-                <p className="text-xs text-slate-400 uppercase tracking-wider mb-1">
-                  Classifier
-                </p>
-                <p className="font-semibold text-slate-200">
-                  XGBoost Binary Classifier (tree_method=hist)
-                </p>
-                <div className="flex items-center gap-2 mt-2 text-xs text-slate-400">
-                  <Calendar className="h-3.5 w-3.5" />
-                  Trained: {data.training_date}
-                </div>
-              </div>
-
-              <div>
-                <p className="text-xs text-slate-400 uppercase tracking-wider mb-1">
-                  Feature Dimensionality
-                </p>
-                <p className="font-semibold text-slate-200 flex items-center gap-1.5">
-                  <Layers className="h-4 w-4 text-blue-400" />
-                  {data.n_features} Featurized Predictors
-                </p>
-                <p className="text-xs text-slate-400 mt-1">
-                  Line aggregates, ratios, RapidFuzz similarity, one-hot ops
-                </p>
-              </div>
-
-              <div>
-                <p className="text-xs text-slate-400 uppercase tracking-wider mb-1">
-                  Optimal Hyperparameters
-                </p>
-                <div className="font-mono text-xs text-slate-300 space-y-1 bg-slate-900/50 p-2.5 rounded-lg border border-slate-800">
-                  {Object.entries(data.best_params).map(([k, v]) => (
-                    <div key={k} className="flex justify-between">
-                      <span className="text-slate-400">{k}:</span>
-                      <span className="text-blue-300">{String(v)}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
+            <AlertCircle className="h-6 w-6 shrink-0 mt-0.5" style={{ color: "#dc2626" }} />
+            <div>
+              <h3 className="text-sm font-bold" style={{ color: "#dc2626" }}>
+                Could not retrieve model metrics
+              </h3>
+              <p className="text-xs mt-1" style={{ color: "#ef4444" }}>
+                {error}
+              </p>
+              <p className="text-xs mt-2" style={{ color: "#64748b" }}>
+                Ensure the FastAPI service is running (uvicorn api.main:app) and the model has been trained.
+              </p>
             </div>
+          </motion.div>
+        )}
+
+        {/* Main content */}
+        {data && (
+          <div className="space-y-8">
+            {/* KPI cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+              {STAT_CARDS.map((card, i) => {
+                const Icon = card.icon;
+                const val = data.metrics[card.key] ?? 0;
+                return (
+                  <motion.div
+                    key={card.key}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.45, delay: i * 0.08, ease: [0.22, 1, 0.36, 1] }}
+                    className="p-6 rounded-2xl border"
+                    style={{ backgroundColor: card.bg, borderColor: card.border }}
+                  >
+                    <div className="flex items-center justify-between mb-3">
+                      <span
+                        className="text-xs font-bold uppercase tracking-wider"
+                        style={{ color: card.color }}
+                      >
+                        {card.label}
+                      </span>
+                      <div
+                        className="p-1.5 rounded-lg"
+                        style={{ backgroundColor: "rgba(255,255,255,0.7)" }}
+                      >
+                        <Icon className="h-4 w-4" style={{ color: card.color }} />
+                      </div>
+                    </div>
+                    <div
+                      className="text-3xl font-extrabold font-mono tracking-tight"
+                      style={{ color: card.color }}
+                    >
+                      {val.toFixed(3)}
+                    </div>
+                    <p className="text-xs mt-1.5" style={{ color: "#64748b" }}>
+                      {card.sub}
+                      {card.key === "precision" && data.metrics.threshold !== undefined && (
+                        <span className="ml-1">({data.metrics.threshold})</span>
+                      )}
+                    </p>
+                  </motion.div>
+                );
+              })}
+            </div>
+
+            {/* Charts */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.35 }}
+            >
+              <MetricsCharts
+                metrics={data.metrics}
+                featureNames={data.feature_names}
+              />
+            </motion.div>
+
+            {/* Model Info Details */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.45 }}
+              className="p-7 rounded-2xl border"
+              style={{ backgroundColor: "#f8fafc", borderColor: "#e2e8f0" }}
+            >
+              <h3
+                className="text-base font-bold mb-5 flex items-center gap-2"
+                style={{ color: "#0d1b2e" }}
+              >
+                <Sliders className="h-5 w-5" style={{ color: "#0066cc" }} />
+                Model Architecture &amp; Training Metadata
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-sm">
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-wider mb-1.5" style={{ color: "#94a3b8" }}>
+                    Classifier
+                  </p>
+                  <p className="font-semibold" style={{ color: "#0d1b2e" }}>
+                    XGBoost Binary Classifier
+                  </p>
+                  <p className="text-xs mt-0.5" style={{ color: "#64748b" }}>
+                    tree_method=hist · GroupKFold
+                  </p>
+                  <div className="flex items-center gap-2 mt-2.5 text-xs" style={{ color: "#94a3b8" }}>
+                    <Calendar className="h-3.5 w-3.5" />
+                    Trained: {data.training_date}
+                  </div>
+                </div>
+
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-wider mb-1.5" style={{ color: "#94a3b8" }}>
+                    Feature Dimensionality
+                  </p>
+                  <p className="font-semibold flex items-center gap-1.5" style={{ color: "#0d1b2e" }}>
+                    <Layers className="h-4 w-4" style={{ color: "#0066cc" }} />
+                    {data.n_features} Featurized Predictors
+                  </p>
+                  <p className="text-xs mt-1" style={{ color: "#64748b" }}>
+                    Line aggregates, ratios, RapidFuzz similarity, one-hot ops
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-wider mb-1.5" style={{ color: "#94a3b8" }}>
+                    Optimal Hyperparameters
+                  </p>
+                  <div
+                    className="font-mono text-xs space-y-1.5 rounded-xl border p-3"
+                    style={{ backgroundColor: "#ffffff", borderColor: "#e2e8f0" }}
+                  >
+                    {Object.entries(data.best_params).map(([k, v]) => (
+                      <div key={k} className="flex justify-between gap-4">
+                        <span style={{ color: "#94a3b8" }}>{k}:</span>
+                        <span className="font-semibold" style={{ color: "#0066cc" }}>
+                          {String(v)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </motion.div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

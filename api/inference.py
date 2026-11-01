@@ -15,6 +15,7 @@ from typing import Any
 
 import numpy as np
 import pandas as pd
+
 try:
     import shap
 except ImportError:
