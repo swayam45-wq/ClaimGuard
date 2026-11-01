@@ -206,11 +206,10 @@ def fit_regional_medians(
 
 def extract_estimate_features(
     estimate: dict[str, Any],
-    regional_medians: dict[str, dict[str, float]],
+    regional_medians: dict[str, dict[str, float]] | None = None,
 ) -> dict[str, float | int]:
     """
     Extract all features for a single estimate (steps 3, 4, 6).
-    regional_medians may be empty at feature-build time; pass {} to skip ratio features.
     """
     line_items: list[dict[str, Any]] = estimate.get("line_items", [])
     vehicle: dict[str, Any] = estimate.get("vehicle", {})
@@ -225,7 +224,7 @@ def extract_estimate_features(
     hours_ratios: list[float] = []
     for li in line_items:
         billed = float(li.get("labor_hours_billed", 0.0) or 0.0)
-        book = float(li.get("book_hours", 0.0) or 0.0)
+        book = float(li.get("labor_hours_book", li.get("book_hours", 0.0)) or 0.0)
         hours_ratios.append(_safe_ratio(billed, book, cap=5.0))
 
     max_hours_ratio = max(hours_ratios) if hours_ratios else 0.0
@@ -460,22 +459,12 @@ def build_features(
     labels: list[int] = [int(est["fraud_label"]) for est in estimates]
 
     # ------------------------------------------------------------------
-    # 2. Compute regional medians on the FULL set as a first pass
-    #    (a proper train-only fit is available via fit_regional_medians
-    #    when called from the training script with train_indices).
-    #    Here we fit on all data to produce the parquet files; the model
-    #    training script must call fit_regional_medians with train_indices.
-    # ------------------------------------------------------------------
-    all_indices = np.arange(n)
-    regional_medians = fit_regional_medians(estimates, all_indices)
-
-    # ------------------------------------------------------------------
-    # 3 + 4 + 6. Extract per-estimate features
+    # 2. Extract per-estimate features (Steps 3, 4, 6)
     # ------------------------------------------------------------------
     print("Extracting per-estimate features …")
     rows: list[dict[str, float | int]] = []
     for est in estimates:
-        rows.append(extract_estimate_features(est, regional_medians))
+        rows.append(extract_estimate_features(est))
 
     df = pd.DataFrame(rows)
     df.insert(0, "shop_id", shop_ids)

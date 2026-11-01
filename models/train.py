@@ -75,11 +75,16 @@ def compute_shop_features(
         {"shop_id": groups_train.values, "label": y_train.values},
         index=X_train.index,
     )
-    if "total_cost" in X_train.columns:
-        shop_df["total_cost"] = X_train["total_cost"].values
+    cost_col = (
+        "total_billed"
+        if "total_billed" in X_train.columns
+        else ("total_cost" if "total_cost" in X_train.columns else None)
+    )
+    if cost_col:
+        shop_df["total_cost"] = X_train[cost_col].values
 
     agg: dict[str, Any] = {"label": "mean"}
-    if "total_cost" in shop_df.columns:
+    if cost_col:
         agg["total_cost"] = "mean"
 
     shop_stats = (
@@ -89,9 +94,7 @@ def compute_shop_features(
     )
     # Global fallbacks for unseen shops in eval
     global_fraud_rate: float = float(y_train.mean())
-    global_avg_cost: float = (
-        float(X_train["total_cost"].mean()) if "total_cost" in X_train.columns else 0.0
-    )
+    global_avg_cost: float = float(X_train[cost_col].mean()) if cost_col else 0.0
 
     def _augment(X: pd.DataFrame, grp: pd.Series) -> pd.DataFrame:
         X_aug = X.copy()
@@ -376,15 +379,24 @@ def main() -> None:
     mean_pr_auc = float(np.mean(fold_scores))
     std_pr_auc = float(np.std(fold_scores))
     print(f"\nBest params: {best_params}")
-    print(f"CV PR-AUC: {mean_pr_auc:.3f} ± {std_pr_auc:.3f}")
+    print(f"CV PR-AUC (OOF across folds): {mean_pr_auc:.4f} ± {std_pr_auc:.4f}")
 
-    # ---- Final model training --------------------------------------------
-    print("\nTraining on full dataset…", end=" ", flush=True)
-    booster, feature_names = train_final_model(X, y, groups, best_params)
+    # ---- Final model training on held-out train split --------------------
+    # Model is trained strictly on training shops (fold 1-4) with fold 5 held out
+    train_idx, test_idx = cv_splits[-1]
+    X_train, y_train, groups_train = X.iloc[train_idx], y.iloc[train_idx], groups.iloc[train_idx]
+    print(
+        f"\nTraining final model on training shops only "
+        f"({len(X_train):,} estimates, {groups_train.nunique()} shops; "
+        f"{len(test_idx):,} estimates held out)…",
+        end=" ",
+        flush=True,
+    )
+    booster, feature_names = train_final_model(X_train, y_train, groups_train, best_params)
     print("Done.")
 
     # ---- Save artifacts --------------------------------------------------
-    save_artifacts(booster, feature_names, best_params, fold_scores, y, args.artifacts)
+    save_artifacts(booster, feature_names, best_params, fold_scores, y_train, args.artifacts)
 
     print("\n" + "=" * 60)
     print("Training complete.")

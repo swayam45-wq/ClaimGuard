@@ -9,12 +9,10 @@ venv/
 .mypy_cache/
 .ruff_cache/
 
-# Data & Model artifacts (generated locally)
+# Data & Local eval outputs
 data/
-models/artifacts/*.json
-models/artifacts/*.pkl
-models/artifacts/*.png
 eval/outputs/
+models/artifacts/*.png
 
 # Environment
 .env

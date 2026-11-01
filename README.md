@@ -16,7 +16,7 @@ ClaimGuard detects fraudulent and inflated line items in auto repair estimates u
 │  ┌──────────┐       ┌──────────┐      ┌──────────┐    ┌──────────────┐ │
 │  │ Synthetic│──────▶│ Feature  │─────▶│ XGBoost  │───▶│   FastAPI    │ │
 │  │ Pipeline │       │ Engineer │      │  +SHAP   │    │  :8000       │ │
-│  │ 50k est. │       │ 25 feats │      │ F1≥0.85  │    │  /predict    │ │
+│  │ 50k est. │       │ 25 feats │      │ PR-AUC 0.97  │    │  /predict    │ │
 │  └──────────┘       └──────────┘      └──────────┘    └──────┬───────┘ │
 │       6 fraud                                                 │         │
 │       patterns                                       ┌────────▼───────┐ │
@@ -41,7 +41,7 @@ ClaimGuard detects fraudulent and inflated line items in auto repair estimates u
 ### 1. Clone & configure
 
 ```bash
-git clone <repo>
+git clone https://github.com/patelswayam88/ClaimGuard.git
 cd ClaimGuard
 cp .env.example .env            # edit if needed
 cp api/.env.example api/.env
@@ -264,10 +264,10 @@ ClaimGuard detects six fraud patterns (implemented in `data_gen/fraud_injector.p
 
 | Metric | Value |
 |--------|-------|
-| Precision | 0.987 |
-| Recall | 0.950 |
-| F1 Score | 0.968 |
-| PR-AUC | 0.982 |
+| Precision | 1.000 |
+| Recall | 0.966 |
+| F1 Score | 0.983 |
+| PR-AUC | 0.983 |
 | Threshold | 0.5 |
 <!-- METRICS_END -->
 

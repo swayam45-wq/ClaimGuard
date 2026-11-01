@@ -1,22 +1,22 @@
 {
-  "training_date": "2026-10-31T16:29:24.422994+00:00",
+  "training_date": "2026-11-01T20:04:05.935203+00:00",
   "best_params": {
     "learning_rate": 0.05,
     "max_depth": 4,
-    "n_estimators": 400,
+    "n_estimators": 200,
     "subsample": 0.8
   },
-  "cv_pr_auc_mean": 0.969169,
-  "cv_pr_auc_std": 0.00261,
+  "cv_pr_auc_mean": 0.980338,
+  "cv_pr_auc_std": 0.001225,
   "cv_fold_scores": [
-    0.968943,
-    0.970409,
-    0.964869,
-    0.972883,
-    0.968743
+    0.978639,
+    0.980319,
+    0.979419,
+    0.982037,
+    0.981278
   ],
-  "n_train": 50000,
-  "fraud_rate": 0.09984,
+  "n_train": 39999,
+  "fraud_rate": 0.098777,
   "fixed_params": {
     "objective": "binary:logistic",
     "eval_metric": "aucpr",

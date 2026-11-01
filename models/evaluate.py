@@ -114,13 +114,14 @@ def load_estimates(data_dir: Path) -> dict[Any, list[str]]:
 
     id_to_fraud_types: dict[Any, list[str]] = {}
     with open(jsonl_path, encoding="utf-8") as fh:
-        for line in fh:
+        for line_idx, line in enumerate(fh):
             line = line.strip()
             if not line:
                 continue
             record: dict[str, Any] = json.loads(line)
             estimate_id = record.get("estimate_id", record.get("id"))
             fraud_types: list[str] = record.get("fraud_types", [])
+            id_to_fraud_types[line_idx] = fraud_types
             if estimate_id is not None:
                 id_to_fraud_types[estimate_id] = fraud_types
     return id_to_fraud_types
@@ -207,11 +208,16 @@ def augment_with_shop_features(
         {"shop_id": groups_train.values, "label": y_train.values},
         index=X_train.index,
     )
-    if "total_cost" in X_train.columns:
-        shop_df["total_cost"] = X_train["total_cost"].values
+    cost_col = (
+        "total_billed"
+        if "total_billed" in X_train.columns
+        else ("total_cost" if "total_cost" in X_train.columns else None)
+    )
+    if cost_col:
+        shop_df["total_cost"] = X_train[cost_col].values
 
     agg: dict[str, str] = {"label": "mean"}
-    if "total_cost" in shop_df.columns:
+    if cost_col:
         agg["total_cost"] = "mean"
 
     shop_stats = (
@@ -220,9 +226,7 @@ def augment_with_shop_features(
         .rename(columns={"label": "shop_fraud_rate", "total_cost": "shop_avg_total_cost"})
     )
     global_fraud_rate = float(y_train.mean())
-    global_avg_cost = (
-        float(X_train["total_cost"].mean()) if "total_cost" in X_train.columns else 0.0
-    )
+    global_avg_cost = float(X_train[cost_col].mean()) if cost_col else 0.0
 
     def _augment(X: pd.DataFrame, grp: pd.Series) -> pd.DataFrame:
         X_aug = X.copy()
@@ -513,11 +517,22 @@ def save_metrics_json(
         artifacts_dir:  Directory to write metrics.json into.
     """
     _ensure_dir(artifacts_dir)
+    meta_path = artifacts_dir / "training_metadata.json"
+    cv_pr_auc = None
+    if meta_path.exists():
+        try:
+            with open(meta_path, encoding="utf-8") as fh:
+                meta = json.load(fh)
+                cv_pr_auc = meta.get("cv_pr_auc_mean")
+        except (OSError, json.JSONDecodeError) as err:
+            warnings.warn(f"Failed to read training metadata: {err}", stacklevel=2)
+
     payload: dict[str, Any] = {
         "precision": round(metrics["precision"], 6),
         "recall": round(metrics["recall"], 6),
         "f1": round(metrics["f1"], 6),
         "pr_auc": round(metrics["pr_auc"], 6),
+        "cv_pr_auc": round(cv_pr_auc, 6) if cv_pr_auc is not None else None,
         "per_fraud_type": {
             ft: {
                 "recall": (
@@ -532,6 +547,7 @@ def save_metrics_json(
         "confusion_matrix": cm.tolist(),
         "threshold": THRESHOLD,
         "test_shop_count": int(groups_test.nunique()),
+        "test_sample_count": len(groups_test),
         "eval_date": date.today().isoformat(),
     }
     out_path = artifacts_dir / "metrics.json"

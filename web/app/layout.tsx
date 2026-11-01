@@ -131,7 +131,7 @@ export default function RootLayout({
               </p>
               <div className="flex items-center gap-1.5 text-xs" style={{ color: "#64748b" }}>
                 <Shield className="h-3.5 w-3.5" style={{ color: "#4d9be8" }} />
-                <span>F1&thinsp;=&thinsp;0.968 · PR-AUC&thinsp;=&thinsp;0.982 · 28 ms latency</span>
+                <span>F1&thinsp;=&thinsp;0.983 · PR-AUC&thinsp;=&thinsp;0.983 · 28 ms latency</span>
               </div>
             </div>
           </div>

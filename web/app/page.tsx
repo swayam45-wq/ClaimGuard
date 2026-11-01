@@ -169,7 +169,7 @@ function AnimatedCounter({
 // ---------------------------------------------------------------------------
 
 const STATS = [
-  { label: "F1 Score", value: 96.8, suffix: "%", desc: "Fraud detection accuracy" },
+  { label: "PR-AUC", value: 98.3, suffix: "%", desc: "Out-of-sample PR-AUC (CV 0.980)" },
   { label: "Estimates Trained", value: 50000, suffix: "+", desc: "CIECA BMS synthetic records" },
   { label: "Fraud Patterns", value: 6, suffix: "", desc: "Labor, parts, phantom & more" },
   { label: "Avg Latency", value: 28, suffix: " ms", desc: "Real-time API inference" },
@@ -400,7 +400,7 @@ export default function HomePage() {
                 style={{ backgroundColor: "#22c55e", opacity: 0.5 }}
               />
             </span>
-            Live · XGBoost + SHAP · CIECA BMS · F1 = 0.968
+            Live · XGBoost + SHAP · CIECA BMS · PR-AUC = 0.983
           </motion.div>
 
           {/* Headline */}
