@@ -260,7 +260,15 @@ ClaimGuard detects six fraud patterns (implemented in `data_gen/fraud_injector.p
 ### Target Metrics (on held-out shops)
 
 <!-- METRICS_START -->
-Train the model to generate metrics (`python models/evaluate.py`).
+### Latest Model Metrics (auto-generated 2026-11-01)
+
+| Metric | Value |
+|--------|-------|
+| Precision | 0.987 |
+| Recall | 0.950 |
+| F1 Score | 0.968 |
+| PR-AUC | 0.982 |
+| Threshold | 0.5 |
 <!-- METRICS_END -->
 
 ### Limitations

@@ -1,40 +1,46 @@
 {
-  "precision": 0.892,
-  "recall": 0.918,
-  "f1": 0.905,
-  "pr_auc": 0.946,
+  "precision": 0.987,
+  "recall": 0.95,
+  "f1": 0.9682,
+  "pr_auc": 0.9817,
   "threshold": 0.5,
-  "test_shop_count": 100,
-  "test_sample_count": 10000,
-  "eval_date": "2025-01-15",
   "per_fraud_type": {
     "inflated_labor_hours": {
-      "recall": 0.941,
-      "count": 2150
+      "recall": 0.938,
+      "count": 355
     },
     "part_price_markup": {
-      "recall": 0.925,
-      "count": 1840
+      "recall": 0.9397,
+      "count": 348
     },
     "duplicate_line_items": {
-      "recall": 0.884,
-      "count": 1120
+      "recall": 1.0,
+      "count": 320
     },
     "unnecessary_operations": {
-      "recall": 0.871,
-      "count": 1390
+      "recall": 1.0,
+      "count": 364
     },
     "phantom_parts": {
-      "recall": 0.952,
-      "count": 980
+      "recall": 0.9687,
+      "count": 351
     },
     "labor_parts_mismatch": {
-      "recall": 0.916,
-      "count": 1260
+      "recall": 0.9942,
+      "count": 342
     }
   },
   "confusion_matrix": [
-    [8940, 60],
-    [82, 918]
-  ]
+    [
+      8947,
+      13
+    ],
+    [
+      52,
+      989
+    ]
+  ],
+  "test_shop_count": 100,
+  "test_sample_count": 10001,
+  "eval_date": "2026-11-01"
 }

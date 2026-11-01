@@ -378,7 +378,7 @@ def main() -> None:
     if f1 < 0.80:
         print(f"\n  WARNING: F1={f1:.4f} is below 0.80 target. Consider retraining with more data.")
     else:
-        print(f"\n  ✓ F1={f1:.4f} meets quality bar.")
+        print(f"\n  [PASS] F1={f1:.4f} meets quality bar.")
 
     # Save metrics JSON
     metrics_out: dict = {
