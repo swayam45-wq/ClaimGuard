@@ -11,7 +11,22 @@ import os
 from pathlib import Path
 
 APP_VERSION: str = "1.0.0"
-ARTIFACTS_DIR: Path = Path(os.getenv("ARTIFACTS_DIR", "models/artifacts"))
+
+
+def _resolve_artifacts_dir() -> Path:
+    env_path = os.getenv("ARTIFACTS_DIR")
+    if env_path:
+        p = Path(env_path)
+        if p.exists():
+            return p
+    # Repo root relative to this file (api/../models/artifacts)
+    repo_artifacts = Path(__file__).resolve().parent.parent / "models" / "artifacts"
+    if repo_artifacts.exists():
+        return repo_artifacts
+    return Path("models/artifacts")
+
+
+ARTIFACTS_DIR: Path = _resolve_artifacts_dir()
 
 # Panel adjacency map – used to detect "unnecessary operations" fraud.
 # Key = panel, value = set of panels considered adjacent / directly related.

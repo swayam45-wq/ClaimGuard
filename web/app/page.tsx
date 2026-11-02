@@ -68,10 +68,10 @@ interface ApiError {
 }
 
 // ---------------------------------------------------------------------------
-// Sample estimate
+// Sample estimates for immediate testing
 // ---------------------------------------------------------------------------
 
-const SAMPLE_ESTIMATE: Estimate = {
+const SAMPLE_INFLATED_LABOR: Estimate = {
   estimate_id: "EST-DEMO-001",
   shop_id: "SHOP-042",
   region: "midwest",
@@ -89,7 +89,7 @@ const SAMPLE_ESTIMATE: Estimate = {
       line_id: 1,
       operation: "R&R",
       panel: "rear_bumper",
-      description: "R&R rear bumper cover",
+      description: "R&R rear bumper cover assembly",
       part: { name: "bumper cover", oem_price: 285.0, billed_price: 285.0, source: "OEM" },
       labor_hours_billed: 2.5,
       labor_hours_book: 2.5,
@@ -109,11 +109,95 @@ const SAMPLE_ESTIMATE: Estimate = {
       line_id: 3,
       operation: "Repair",
       panel: "trunk_lid",
-      description: "Repair trunk lid dents",
+      description: "Repair trunk lid panel dents",
       part: null,
       labor_hours_billed: 8.5,
       labor_hours_book: 2.0,
       labor_rate: 78.0,
+    },
+  ],
+};
+
+const SAMPLE_CLEAN: Estimate = {
+  estimate_id: "EST-CLEAN-001",
+  shop_id: "SHOP-088",
+  region: "northeast",
+  vehicle: {
+    year: 2023,
+    make: "Toyota",
+    model: "Camry",
+    trim: "LE",
+    mileage: 18200,
+    class: "mid-size",
+  },
+  scenario: "front_impact",
+  line_items: [
+    {
+      line_id: 1,
+      operation: "R&R",
+      panel: "front_bumper",
+      description: "R&R front bumper cover assembly",
+      part: { name: "front bumper cover", oem_price: 380.0, billed_price: 380.0, source: "OEM" },
+      labor_hours_billed: 2.8,
+      labor_hours_book: 2.8,
+      labor_rate: 75.0,
+    },
+    {
+      line_id: 2,
+      operation: "Replace",
+      panel: "right_headlight",
+      description: "Replace passenger side LED headlight",
+      part: { name: "headlight assembly", oem_price: 410.0, billed_price: 410.0, source: "OEM" },
+      labor_hours_billed: 1.2,
+      labor_hours_book: 1.2,
+      labor_rate: 75.0,
+    },
+    {
+      line_id: 3,
+      operation: "Repair",
+      panel: "hood",
+      description: "Repair minor crease at leading hood edge",
+      part: null,
+      labor_hours_billed: 2.5,
+      labor_hours_book: 2.5,
+      labor_rate: 75.0,
+    },
+  ],
+};
+
+const SAMPLE_PARTS_MARKUP: Estimate = {
+  estimate_id: "EST-MARKUP-001",
+  shop_id: "SHOP-129",
+  region: "southwest",
+  vehicle: {
+    year: 2022,
+    make: "Ford",
+    model: "F-150",
+    trim: "XL",
+    mileage: 34000,
+    class: "truck",
+  },
+  scenario: "side_swipe",
+  line_items: [
+    {
+      line_id: 1,
+      operation: "Replace",
+      panel: "left_door_front",
+      description: "Replace driver front door shell (OEM markup)",
+      part: { name: "front door shell", oem_price: 650.0, billed_price: 1040.0, source: "OEM" },
+      labor_hours_billed: 4.0,
+      labor_hours_book: 3.8,
+      labor_rate: 82.0,
+    },
+    {
+      line_id: 2,
+      operation: "Refinish",
+      panel: "roof",
+      description: "Refinish roof panel (non-adjacent panel)",
+      part: null,
+      labor_hours_billed: 3.5,
+      labor_hours_book: 2.0,
+      labor_rate: 82.0,
     },
   ],
 };
@@ -237,18 +321,33 @@ const TRUST = [
 export default function HomePage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<"paste" | "upload">("paste");
-  const [jsonText, setJsonText] = useState("");
+  const [jsonText, setJsonText] = useState(() =>
+    JSON.stringify(SAMPLE_INFLATED_LABOR, null, 2)
+  );
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [loadingSeconds, setLoadingSeconds] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [validationErrors, setValidationErrors] = useState<ValidationError[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const formRef = useRef<HTMLDivElement>(null);
 
-  // ── Fill sample ──────────────────────────────────────────────────────────
-  const fillSample = () => {
-    setJsonText(JSON.stringify(SAMPLE_ESTIMATE, null, 2));
+  // ── Timer for slow Render free-tier cold starts ─────────────────────────
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (loading) {
+      setLoadingSeconds(0);
+      timer = setInterval(() => {
+        setLoadingSeconds((s) => s + 1);
+      }, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [loading]);
+
+  // ── Fill preset samples ──────────────────────────────────────────────────
+  const loadPreset = (preset: Estimate) => {
+    setJsonText(JSON.stringify(preset, null, 2));
     setError(null);
     setValidationErrors([]);
   };
@@ -634,21 +733,34 @@ export default function HomePage() {
             {/* Paste tab */}
             {activeTab === "paste" && (
               <div>
-                <div className="flex items-center justify-between mb-2">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
                   <label className="text-sm font-semibold" style={{ color: "#0d1b2e" }}>
                     Estimate JSON
                   </label>
-                  <button
-                    onClick={fillSample}
-                    className="text-xs px-3 py-1.5 rounded-lg font-semibold border transition-all hover:shadow-sm"
-                    style={{
-                      backgroundColor: "#e8f1fb",
-                      color: "#0066cc",
-                      borderColor: "#c3d9f5",
-                    }}
-                  >
-                    Load Sample Estimate
-                  </button>
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <span className="text-xs text-slate-400 mr-1">Presets:</span>
+                    <button
+                      type="button"
+                      onClick={() => loadPreset(SAMPLE_CLEAN)}
+                      className="text-xs px-2.5 py-1 rounded-md font-semibold border transition-all hover:bg-emerald-50 text-emerald-700 border-emerald-200"
+                    >
+                      Clean (Low Risk)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => loadPreset(SAMPLE_INFLATED_LABOR)}
+                      className="text-xs px-2.5 py-1 rounded-md font-semibold border transition-all hover:bg-rose-50 text-rose-700 border-rose-200"
+                    >
+                      Inflated Labor (High)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => loadPreset(SAMPLE_PARTS_MARKUP)}
+                      className="text-xs px-2.5 py-1 rounded-md font-semibold border transition-all hover:bg-amber-50 text-amber-700 border-amber-200"
+                    >
+                      Parts Markup (Suspicious)
+                    </button>
+                  </div>
                 </div>
                 <textarea
                   value={jsonText}
@@ -771,7 +883,9 @@ export default function HomePage() {
               {loading ? (
                 <>
                   <Loader2 className="h-5 w-5 animate-spin" />
-                  Analyzing…
+                  {loadingSeconds > 3
+                    ? `Waking up server on Render... (${loadingSeconds}s)`
+                    : "Analyzing Estimate…"}
                 </>
               ) : (
                 <>
@@ -781,6 +895,15 @@ export default function HomePage() {
                 </>
               )}
             </button>
+
+            {/* Live demo wake-up note */}
+            <div className="mt-4 p-3.5 rounded-xl border bg-slate-50 border-slate-200 flex items-start gap-2.5 text-xs text-slate-600">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse mt-1 shrink-0" />
+              <div>
+                <span className="font-semibold text-navy-900">Live Demo Cloud Notice: </span>
+                Free-tier backend instances on Render spin down during idle periods. If your first request takes ~30 seconds, the container is waking up.
+              </div>
+            </div>
           </motion.div>
         </div>
       </section>

@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: claimguard-api
+    runtime: python
+    buildCommand: pip install -r api/requirements.txt
+    startCommand: python -m uvicorn api.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PORT
+        value: 8000
+      - key: ARTIFACTS_DIR
+        value: models/artifacts
+      - key: PYTHON_VERSION
+        value: 3.11.9
